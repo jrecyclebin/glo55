@@ -75,8 +75,11 @@ Each monitor is independent and contains:
 
 ### Config.toml Structure
 ```toml
-[workspace]
-names = ["main", "web", "code", "chat", "media", "6", "7", "8", "9", "temp"]
+[monitor.0]
+workspaces = ["main", "web", "code", "chat", "media"]
+
+[monitor.1]
+workspaces = ["terminal", "browser", "documents", "4", "5", "6", "7", "8", "9", "temp"]
 
 [keybindings]
 # Workspace switching
@@ -118,11 +121,12 @@ names = ["main", "web", "code", "chat", "media", "6", "7", "8", "9", "temp"]
 - **Positioning**: Rectangle with coordinates relative to area edges
   - Each coordinate (left, top, right, bottom) can be relative to any area edge
   - Fixed pixel values
-- **Colors**:
-  - `fore`: Foreground color
-  - `back`: Background color (gradients use both colors)
 - **Interaction**:
   - `action`: Optional clickable action (close, minimize, maximize)
+
+### Color Properties (where applicable)
+- `fore`: Foreground color (applies to solid, gradient, text elements)
+- `back`: Background color (applies to solid, gradient, text elements - gradients use both colors)
 
 ### Element-Specific Properties
 **Gradient Elements**:
@@ -135,46 +139,110 @@ names = ["main", "web", "code", "chat", "media", "6", "7", "8", "9", "temp"]
 - `content`: Text string with template variables
 - `font`: Font name to use
 - `size`: Font size in pixels
-- Template variables: `$title` (window title)
+- Template variables: `$title` (window title), `$workspace` (current workspace name), `$time` (current time)
+
+### Global Variables
+- **Syntax**: `$variable_name` references values from `[vars]` section
+- **Usage**: Can be used in any string property (colors, paths, text content)
+- **Scope**: Available throughout the entire theme file
+
+### State-Based Variables
+- **Syntax**: `[window.focused]`, `[window.hover]`, `[window.clicked]`, `[window.collapsed]`
+- **Toolbar Syntax**: `[toolbar.0.focused]`, `[toolbar.0.hover]`, `[toolbar.0.clicked]`, `[toolbar.0.collapsed]`
+- **Purpose**: Override global variables when specific states are active
+- **Inheritance**: State sections inherit from `[vars]` and can override individual variables
+- **Priority**: State variables take precedence over global variables when the state is active
+
+> **Important**: State-based variables are NOT elements. Elements can be named anything (e.g., `[window.background]`, `[window.my_custom_element]`), but state-based variables must use the reserved state keywords: `focused`, `hover`, `clicked`, `collapsed`.
 
 ### Theme.toml Structure
 ```toml
+# Global variables that can be referenced throughout the theme
+[vars]
+primary_color = "#87ceeb"
+secondary_color = "#4682b4"
+background_color = "#2d2d2d"
+text_color = "#ffffff"
+close_icon_path = "icons/close.png"
+pattern_path = "patterns/grid.png"
+
+# Window state overrides
+[window.focused]
+primary_color = "#ffd700"
+text_color = "#000000"
+
+[window.hover]
+primary_color = "#add8e6"
+
+[window.clicked]
+primary_color = "#ff6347"
+
+[window.collapsed]
+primary_color = "#808080"
+
+# Toolbar state overrides
+[toolbar.0.focused]
+primary_color = "#ff69b4"
+
+[toolbar.0.hover]
+primary_color = "#dda0dd"
+
+[toolbar.0.clicked]
+primary_color = "#da70d6"
+
 [window]
 border_width = 2
 window_gap = 4
 focus_behavior = "follow_mouse"
 
-[window.elements.background]
+[window.background]
 type = "solid"
 left = { edge = "left", offset = 0 }
 top = { edge = "top", offset = 0 }
 right = { edge = "right", offset = 0 }
 bottom = { edge = "bottom", offset = 0 }
-fore = "#2d2d2d"
-back = "#2d2d2d"
+fore = "$background_color"
+back = "$background_color"
 
-[window.elements.border_top]
+[window.border_top]
 type = "gradient"
 left = { edge = "left", offset = 0 }
 top = { edge = "top", offset = 0 }
 right = { edge = "right", offset = 0 }
 bottom = { edge = "top", offset = 2 }
-fore = "#87ceeb"
-back = "#4682b4"
+fore = "$primary_color"
+back = "$secondary_color"
 direction = 90
 
-[toolbar]
+[toolbar.0]
+monitor = 0
 border_width = 1
 
-[toolbar.elements.workspace_indicator]
+[toolbar.0.workspace_indicator]
 type = "text"
 left = { edge = "left", offset = 10 }
 top = { edge = "top", offset = 4 }
 right = { edge = "left", offset = 100 }
 bottom = { edge = "bottom", offset = 4 }
-fore = "#87ceeb"
+fore = "$primary_color"
 back = "#00000000"
 content = "Workspace: $workspace"
+font = "monospace"
+size = 10
+
+[toolbar.1]
+monitor = 1
+border_width = 1
+
+[toolbar.1.clock]
+type = "text"
+left = { edge = "right", offset = -100 }
+top = { edge = "top", offset = 4 }
+right = { edge = "right", offset = -10 }
+bottom = { edge = "bottom", offset = 4 }
+fore = "$text_color"
+back = "#00000000"
+content = "$time"
 font = "monospace"
 size = 10
 ```

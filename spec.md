@@ -13,7 +13,9 @@ glo55/
 ├── x11.v               # X11 bindings and integration
 └── glo55/
     ├── config.v        # Configuration loading and management
-    ├── theme.v         # Theme loading and element rendering
+    ├── drawing.v       # Drawing to an X11 graphics context
+    ├── element.v       # Element accessors and rendering
+    ├── theme.v         # Theme loading and variable replacement
     ├── window_manager.v # Core window management logic
     └── workspace.v     # Workspace and monitor management
 ```
@@ -29,15 +31,35 @@ glo55/
 - Custom X11 bindings for V
 - Handles X11 connection and event processing
 - Provides low-level window operations
+- Fonts are loading using XftFontOpenName rather than XLoadFont.
+- Text must be UTF-8, so XftDrawStringUtf8 is used to draw text.
 
 #### Configuration (glo55/config.v)
 - `Config` struct with configuration data
 - `Config.load()` static method for loading config.toml
 - Methods for accessing keyboard shortcuts and workspace names
 
+#### Configuration (glo55/drawing.v)
+- `DrawingContext` struct with screen, window, graphics context, everything need
+  to perform drawing operations.
+- `DrawingContext.create(conn &X11Connection, window Window, width u32, height u32)`
+- `drawingCtx.destroy()` to free the DrawingContext object.
+- `drawingCtx.load_fonts(font_specs []string)` to load fonts. Returns an array
+   of internal `Font` objects.
+
+
+#### Element Rendering (glo55/element.v)
+- `Element` struct with element type and properties
+- `Element.load()` static method for loading theme.toml
+- `element.render()` for solid, gradient, image, pattern, and text types
+- `Area` struct for positioning, the left/top/right/bottom settings.
+
 #### Theme System (glo55/theme.v)
-- `Theme` struct with theme data and elements
+- `Theme` struct with theme data (arrays for `windows` and `toolbars` defined
+   by the theme)
 - `Theme.load()` static method for loading theme.toml
+- `theme.get_fonts()` method for getting a string array of fonts to load,
+  compatible with `drawingCtx.load_fonts`.
 - Element rendering methods for solid, gradient, image, pattern, and text types
 
 #### Window Manager (glo55/window_manager.v)
@@ -75,10 +97,10 @@ Each monitor is independent and contains:
 
 ### Config.toml Structure
 ```toml
-[monitor.0]
+[[monitors]]
 workspaces = ["main", "web", "code", "chat", "media"]
 
-[monitor.1]
+[[monitors]]
 workspaces = ["terminal", "browser", "documents", "4", "5", "6", "7", "8", "9", "temp"]
 
 [keybindings]
@@ -147,13 +169,13 @@ workspaces = ["terminal", "browser", "documents", "4", "5", "6", "7", "8", "9", 
 - **Scope**: Available throughout the entire theme file
 
 ### State-Based Variables
-- **Syntax**: `[window.focused]`, `[window.hover]`, `[window.clicked]`, `[window.collapsed]`
-- **Toolbar Syntax**: `[toolbar.0.focused]`, `[toolbar.0.hover]`, `[toolbar.0.clicked]`, `[toolbar.0.collapsed]`
+- **Syntax**: `[windows.focused]`, `[windows.hover]`, `[windows.clicked]`, `[windows.collapsed]`
+- **Toolbar Syntax**: `[toolbars.focused]`, `[toolbars.hover]`, `[toolbars.clicked]`, `[toolbars.collapsed]`
 - **Purpose**: Override global variables when specific states are active
 - **Inheritance**: State sections inherit from `[vars]` and can override individual variables
 - **Priority**: State variables take precedence over global variables when the state is active
 
-> **Important**: State-based variables are NOT elements. Elements can be named anything (e.g., `[window.background]`, `[window.my_custom_element]`), but state-based variables must use the reserved state keywords: `focused`, `hover`, `clicked`, `collapsed`.
+> **Important**: State-based variables are NOT elements. Elements can be named anything (e.g., `[windows.background]`, `[windows.my_custom_element]`), but state-based variables must use the reserved state keywords: `focused`, `hover`, `clicked`, `collapsed`.
 
 ### Theme.toml Structure
 ```toml
@@ -166,36 +188,30 @@ text_color = "#ffffff"
 close_icon_path = "icons/close.png"
 pattern_path = "patterns/grid.png"
 
-# Window state overrides
-[window.focused]
-primary_color = "#ffd700"
-text_color = "#000000"
-
-[window.hover]
-primary_color = "#add8e6"
-
-[window.clicked]
-primary_color = "#ff6347"
-
-[window.collapsed]
-primary_color = "#808080"
-
-# Toolbar state overrides
-[toolbar.0.focused]
-primary_color = "#ff69b4"
-
-[toolbar.0.hover]
-primary_color = "#dda0dd"
-
-[toolbar.0.clicked]
-primary_color = "#da70d6"
-
-[window]
+# The first window definition is the default for all windows.
+# The `monitor`, for instance, can be set to apply a different window styling
+# to windows on a different monitor.
+[[windows]]
 border_width = 2
 window_gap = 4
 focus_behavior = "follow_mouse"
 
-[window.background]
+# Window state overrides
+[windows.focused]
+primary_color = "#ffd700"
+text_color = "#000000"
+
+[windows.hover]
+primary_color = "#add8e6"
+
+[windows.clicked]
+primary_color = "#ff6347"
+
+[windows.collapsed]
+primary_color = "#808080"
+
+# Window elements
+[windows.background]
 type = "solid"
 left = { edge = "left", offset = 0 }
 top = { edge = "top", offset = 0 }
@@ -204,7 +220,7 @@ bottom = { edge = "bottom", offset = 0 }
 fore = "$background_color"
 back = "$background_color"
 
-[window.border_top]
+[windows.border_top]
 type = "gradient"
 left = { edge = "left", offset = 0 }
 top = { edge = "top", offset = 0 }
@@ -214,11 +230,21 @@ fore = "$primary_color"
 back = "$secondary_color"
 direction = 90
 
-[toolbar.0]
+[[toolbars]]
 monitor = 0
 border_width = 1
 
-[toolbar.0.workspace_indicator]
+# Toolbar state overrides
+[toolbars.focused]
+primary_color = "#ff69b4"
+
+[toolbars.hover]
+primary_color = "#dda0dd"
+
+[toolbars.clicked]
+primary_color = "#da70d6"
+
+[toolbars.workspace_indicator]
 type = "text"
 left = { edge = "left", offset = 10 }
 top = { edge = "top", offset = 4 }
@@ -230,11 +256,11 @@ content = "Workspace: $workspace"
 font = "monospace"
 size = 10
 
-[toolbar.1]
+[[toolbars]]
 monitor = 1
 border_width = 1
 
-[toolbar.1.clock]
+[toolbars.clock]
 type = "text"
 left = { edge = "right", offset = -100 }
 top = { edge = "top", offset = 4 }

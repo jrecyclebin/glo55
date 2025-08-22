@@ -394,3 +394,118 @@ The following areas should be verified through functional testing rather than un
    - Window management operations
    - Workspace switching and window movement
    - Theme rendering and visual appearance
+
+## Interface Specification
+
+### Core Components
+
+#### `WindowManager`
+**Role**: Central event router and multi-monitor coordinator
+**Internal Use Only** - no external consumers
+
+##### Methods:
+- `handle_map_request(e XEvent, wa XWindowAttributes)`
+  - Adds window to internal list
+  - Forwards to relevant `Monitor` based on `get_monitor_at(e.x, e.y)`
+  - *Does not* position windows directly
+- `get_monitor_work_area(monitor_id u32) ScreenRect`
+  - Returns X11 coordinates of usable area (excludes panels)
+- `get_monitor_at(x i32, y i32) ?MonitorId`
+  - Determines physical monitor containing coordinates
+
+#### `Monitor`
+**Role**: Per-display layout and window management
+
+##### Methods:
+- `add_window(window_id u32, initial_rect ScreenRect)`
+  - Forces new windows into layout's starting position (e.g. master pane)
+  - Floating windows preserve requested position
+- `arrange() []WindowUpdate`
+  - *Full recalculation* of all window positions
+  - Returns `WindowUpdate` structs for compositor to apply
+  - Handles cases where windows exceed screen bounds (no clamping)
+- `remove_window(window_id u32)`
+  - Triggers `arrange()` after removal
+
+#### `ScreenRect`
+**Role**: X11 coordinate container
+
+```v
+struct ScreenRect {
+    x i32  // Absolute X11 physical pixels
+    y i32  // Absolute X11 physical pixels
+    width u32
+    height u32
+}
+```
+
+*Replaces former `Area` struct - never contains theme scaling*
+
+#### `ThemeArea`
+**Role**: Theme-specific positioning (before scaling)
+
+```v
+struct ThemeArea {
+    base_x f32  // Relative to 800px width
+    base_y f32  // Relative to 600px height
+    width f32
+    height f32
+}
+```
+
+*Converted to `ScreenRect` via theme scaling rules before rendering*
+
+### Coordinate System Rules
+
+1. **All internal operations** use raw X11 physical pixel coordinates
+2. **Theme scaling applies only at rendering time**:
+   - Y-axis: Scaled proportionally to screen height
+   - X-axis: Stretched to fill width (no scaling)
+3. **No virtual coordinate systems** in WindowManager logic
+
+### Layout Management Workflow
+
+```mermaid
+graph TD
+    A[X11 MapRequest] --> B{WindowManager}
+    B -->|Route to Monitor| C[Monitor::add_window]
+    C --> D[Layout::add]
+    D --> E[Monitor::arrange]
+    E --> F[Return WindowUpdate list]
+    F --> G[Compositor applies changes]
+```
+
+### Layout Interface
+
+```v
+interface Layout {
+    arrange(windows []Window, work_area ScreenRect) []WindowUpdate
+    add(window &Window, work_area ScreenRect) InitialPosition
+    remove(removed_id u32, windows []Window, work_area ScreenRect) []WindowUpdate
+    promote(window_id u32, windows []Window, work_area ScreenRect) []WindowUpdate  // Move window to master
+    demote(window_id u32, windows []Window, work_area ScreenRect) []WindowUpdate    // Move window to stack
+    swap_up(window_id u32, windows []Window, work_area ScreenRect) []WindowUpdate   // Reorder within stack
+    swap_down(window_id u32, windows []Window, work_area ScreenRect) []WindowUpdate // Reorder within stack
+}
+```
+
+### Key Implementation Notes
+- **Tiling layouts** recalculate all positions from scratch
+- **Floating windows** ignore layout constraints (identified via `window.is_floating()`)
+- **WindowUpdate** contains only windows requiring actual changes:
+  ```v
+  struct WindowUpdate {
+      window_id u32
+      target_rect ScreenRect
+  }
+  ```
+
+### TilingLayout Implementation
+
+```v
+struct TilingLayout {
+    master_ratio f32  // Master pane width ratio (e.g. 0.6 = 60% of screen)
+    gap_width u32     // Configurable gap between windows
+    border_width u32  // Window border width
+}
+```

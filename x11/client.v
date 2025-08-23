@@ -14,11 +14,11 @@ type X11Color = u64
 // C types
 @[typedef]
 struct C.XWindowAttributes {
-    x               int
-    y               int
-    width           int
-    height          int
-    border_width    int
-    depth           int
-    // ... other fields we don't need for now
+	x            int
+	y            int
+	width        int
+	height       int
+	border_width int
+	depth        int
+	// ... other fields we don't need for now
 }

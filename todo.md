@@ -15,10 +15,10 @@
 - [x] Add basic logging using V's log module
 
 ### 1.3 Core Data Structures
-- [ ] Define WindowManager struct with monitors, layouts, draw
-- [ ] Define Monitor, Workspace, WindowSpec, Window structs
-- [ ] Define Layout interface and WindowUpdate struct
-- [ ] Define TilingLayout struct
+- [x] Define WindowManager struct with monitors, layouts, draw
+- [x] Define Monitor, Workspace, WindowSpec, Window structs
+- [x] Define Layout interface and WindowUpdate struct
+- [x] Define TilingLayout struct
 
 ### 1.4 Basic Event Handling
 - [ ] Define basic X11 event types

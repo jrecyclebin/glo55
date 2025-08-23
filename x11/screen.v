@@ -13,7 +13,7 @@ fn C.XRootWindow(&C.Display, int) u64
 struct C.Display {}
 
 // X11 connection handle
-struct X11Connection {
+pub struct X11Connection {
 mut:
 	display &C.Display = unsafe { nil }
 }
@@ -83,11 +83,11 @@ pub fn (conn X11Connection) pending_events() bool {
 pub fn (mut conn X11Connection) next_event() !Event {
 	mut xevent := C.XEvent{}
 	result := C.XNextEvent(conn.display, &xevent)
-	
+
 	if result != 0 {
 		return error('Failed to get next event')
 	}
-	
+
 	return x11_event_to_event(xevent)
 }
 
@@ -99,61 +99,61 @@ pub fn (conn X11Connection) flush() {
 // Convert X11 event to our Event structure
 fn x11_event_to_event(xevent C.XEvent) Event {
 	event_type := x11_event_to_type(xevent.type)
-	
+
 	// TODO: Extract event-specific data based on event type
 	// For now, we'll create basic event structures
-	mut data := voidptr(0)
-	
+	mut data := unsafe { nil }
+
 	match event_type {
 		.key_press, .key_release {
 			key_data := KeyEvent{
 				keycode: 0
-				state: 0
-				root: 0
-				child: 0
-				x_root: 0
-				y_root: 0
-				x: 0
-				y: 0
+				state:   0
+				root:    0
+				child:   0
+				x_root:  0
+				y_root:  0
+				x:       0
+				y:       0
 			}
 			data = unsafe { &key_data }
 		}
 		.motion_notify {
 			motion_data := MotionEvent{
-				x: 0
-				y: 0
-				x_root: 0
-				y_root: 0
-				state: 0
-				is_hint: 0
+				x:           0
+				y:           0
+				x_root:      0
+				y_root:      0
+				state:       0
+				is_hint:     0
 				same_screen: false
 			}
 			data = unsafe { &motion_data }
 		}
 		.create_notify, .destroy_notify, .map_request, .configure_request {
 			window_data := WindowEvent{
-				window: 0
-				parent: 0
-				x: 0
-				y: 0
-				width: 0
-				height: 0
-				border_width: 0
+				window:            0
+				parent:            0
+				x:                 0
+				y:                 0
+				width:             0
+				height:            0
+				border_width:      0
 				override_redirect: false
 			}
 			data = unsafe { &window_data }
 		}
 		else {
-			data = voidptr(0)
+			data = unsafe { nil }
 		}
 	}
-	
+
 	return Event{
-		type: event_type
-		window: 0 // Will be filled based on event type
-		time: 0   // Will be filled based on event type
-		serial: 0
+		type:       event_type
+		window:     0 // Will be filled based on event type
+		time:       0 // Will be filled based on event type
+		serial:     0
 		send_event: false
-		data: data
+		data:       data
 	}
 }

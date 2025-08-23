@@ -29,6 +29,6 @@ struct C.XWindowAttributes {
 // X11 Event structure (simplified)
 @[typedef]
 struct C.XEvent {
-    type int
-    // ... other fields we'll access as needed
+	type int
+	// ... other fields we'll access as needed
 }

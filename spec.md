@@ -10,8 +10,11 @@ Glo55 is a tiling window manager for Linux X11 written in the V language. It fea
 ```
 glo55/
 ├── main.v              # Entry point with main() function
-├── x11.v               # X11 bindings and integration
-└── glo55/
+├── x11/                # X11 module: bindings and integration
+│   ├── client.v        # Client-related code
+│   ├── events.v        # Event-related code
+│   └── screen.v        # Screen-related code
+└── glo55/              # Glo55 module
     ├── config.v        # Configuration loading and management
     ├── drawing.v       # Drawing to an X11 graphics context
     ├── element.v       # Element accessors and rendering
@@ -28,7 +31,7 @@ glo55/
 - Orchestrates initialization sequence
 - Starts main event loop
 
-#### X11 Integration (x11.v)
+#### X11 Integration (x11/*.v)
 - Custom X11 bindings for V
 - Handles X11 connection and event processing
 - Provides low-level window operations
@@ -42,44 +45,52 @@ type Atom = u64
 type X11Color = u64
 ```
 
-X11 measurement types are: x int, y int, width u32, height 32.
+X11 measurement types are: x int, y int, width u32, height u32.
 
 #### Configuration (glo55/config.v)
 - `Config` struct with configuration data
-- `Config.load()` static method for loading config.toml
+- `Config.from_toml()` static method for loading config.toml
 - Methods for accessing keyboard shortcuts and workspace names
 
 #### Configuration (glo55/drawing.v)
-- `DrawingContext` struct with screen, window, graphics context, everything need
-  to perform drawing operations.
-- `DrawingContext.create(conn &X11Connection, window Window, width u32, height u32)`
-- `drawingCtx.destroy()` to free the DrawingContext object.
-- `drawingCtx.load_fonts(font_specs []string)` to load fonts. Returns an array
+- `DrawingContext` struct with screen, root window, graphics context, everything
+  needed to perform drawing operations. One drawing context is used globally
+  for the entire window manager.
+- `DrawingContext.create(conn &X11Connection, root Client, width u32, height u32)`
+- `drawing_ctx.load_fonts(font_specs []string)` to load fonts. Returns an array
    of internal `Font` objects.
+- Conversion of theme colors into X11 colors, to allow these colors to be used
+  when drawing.
 
 #### Element Rendering (glo55/element.v)
 - `Element` struct with element type and properties
-- `Element.load()` static method for loading theme.toml
-- `element.render()` for solid, gradient, image, pattern, and text types
+- `Element.from_toml()` static method for loading from a TOML object.
+- `ele.render()` for solid, gradient, image, pattern, and text types
 
 #### Layout System (glo55/layout.v)
 - `Layout` interface (see later in this doc)
-- `TitlingLayout` struct that implements master/stack
+- `TilingLayout` struct that implements master/stack
 
 #### Theme System (glo55/theme.v)
 - `Theme` struct with theme data (arrays for `windows` and `toolbars` defined
    by the theme)
-- `Theme.load()` static method for loading theme.toml
-- `theme.get_fonts()` method for getting a string array of fonts to load,
-  compatible with `drawingCtx.load_fonts`.
+- `Theme.from_toml()` static method for loading from theme.toml
+- `thm.get_fonts()` method for getting a string array of fonts to load,
+  compatible with `drawing_ctx.load_fonts`.
 - Element rendering methods for solid, gradient, image, pattern, and text types
 - `ThemeArea` struct for positioning, the left/top/right/bottom settings.
+
+#### Window Type (glo55/window.v)
+- The `Window` type is the struct for internal representation of windows while
+  the `Client` type is just the X11 window ID - which is stored in the `Window`
+  struct.
+- The `WindowSpec` type contains the coordinates for a window within a given
+  workspace and a refernce to the `Window` object.
 
 #### Window Manager (glo55/window_manager.v)
 - `WindowManager` struct containing all monitor and window state
 - Core window management operations
 - `WindowUpdate` struct for describing window operations
-- Integration with X11, config, and theme systems
 
 #### Workspace Management (glo55/workspace.v)
 - `Workspace` struct for per-monitor workspace definitions
@@ -417,52 +428,82 @@ The following areas should be verified through functional testing rather than un
 **Role**: Central event router and multi-monitor coordinator
 **Internal Use Only** - no external consumers
 
+```v
+struct WindowManager {
+  monitors []Monitor
+  layouts []Layout
+  draw DrawingContext
+mut:
+  windows []Window
+  // ... other global properties
+}
+```
+
 ##### Methods:
 - `on_window_open(c Client, rect ScreenRect, border_width u32)`
   - Adds window to internal list
   - Forwards to relevant `Monitor` based on what monitor is currently active
-  - *Does not* position windows directly
   - Called by the MaqRequestEvent handler.
+  - The `rect` and `border_width` come from X11's XWindowAttributes, so we
+    know the initial attributes of this window.
 - Other events: `on_button_press`, `on_screen_resize`, `on_window_close`,
   `on_window_hover`, `on_key_press`, etc.
 - `get_monitor_work_area(monitor_id MonitorId) ScreenRect`
   - Returns X11 coordinates of usable area (excludes panels)
-- `get_monitor_at(x i32, y i32) ?MonitorId`
+- `get_monitor_at(x int, y int) ?MonitorId`
   - Determines physical monitor containing coordinates
 - `set_monitor_as_active(monitor_id MonitorId)`
   - Sets the active Monitor (happens in `on_motion_notify`)
 
 ```v
-type MonitorId = u32
+type MonitorId = int   // the index of this monitor in the main array
 ```
 
 #### `Monitor`
-**Role**: Per-display layout and window management
+**Role**: Container for workspaces
 
-##### Methods:
-- `add_window(c Client, initial_rect ScreenRect)`
-  - Forces new windows into layout's starting position (e.g. master pane)
-  - Floating windows preserve requested position
-- `arrange() []WindowUpdate`
-  - *Full recalculation* of all window positions
-  - Returns `WindowUpdate` structs for compositor to apply
-  - Handles cases where windows exceed screen bounds (no clamping)
-- `remove_window(c Client)`
-  - Triggers `arrange()` after removal
+```v
+struct Monitor {
+  workspaces []Workspace
+  geometry ScreenRect
+  work_area ScreenRect
+}
+```
+
+#### `Window`
+**Role**: Internal representation of managed windows
+
+```v
+struct Window {
+  id Client
+mut:
+  title string
+  flags u32     // bit fields for is_visible, is_floating
+}
+```
+
+#### `WindowSpec`
+**Role**: Instance of a window within a specific workspace
+
+```v
+struct WindowSpec {
+  info &Window
+mut:
+  rect ScreenRect
+}
+```
 
 #### `ScreenRect`
 **Role**: X11 coordinate container
 
 ```v
 struct ScreenRect {
-    x i32  // Absolute X11 physical pixels
-    y i32  // Absolute X11 physical pixels
+    x int  // Absolute X11 physical pixels
+    y int  // Absolute X11 physical pixels
     width u32
     height u32
 }
 ```
-
-*Replaces former `Area` struct - never contains theme scaling*
 
 #### `ThemeArea`
 **Role**: Theme-specific positioning (before scaling)
@@ -478,6 +519,27 @@ struct ThemeArea {
 
 *Converted to `ScreenRect` via theme scaling rules before rendering*
 
+#### `Workspace`
+**Role**: Per-workspace layout and window management
+
+```v
+struct Workspace {
+  title string
+  layout &Layout
+mut:
+  windows []WindowSpec
+}
+```
+
+##### Methods:
+
+- `add(c Client, initial_rect ScreenRect)`
+  - Forces new windows into layout's starting position (e.g. master pane)
+  - Floating windows preserve requested position
+  - Triggers `arrange`
+- `remove(c Client)`
+  - Triggers `arrange` after removal
+
 ### Coordinate System Rules
 
 1. **All internal operations** use raw X11 physical pixel coordinates
@@ -490,27 +552,32 @@ struct ThemeArea {
 
 ```mermaid
 graph TD
-    A[X11 MapRequest] --> B{WindowManager}
-    B -->|Route to Monitor| C[Monitor::add_window]
-    C --> D[Layout::add]
-    D --> E[Monitor::arrange]
-    E --> F[Return WindowUpdate list]
-    F --> G[Compositor applies changes]
+    A[X11 MapRequest] --> B[WindowManager::on_window_open]
+    B -->|Route to active Workspace| C[Workspace::add]
+    C --> D[Layout::arrange]
+    D --> E[Return WindowUpdate list]
+    E --> F[X11 applies changes]
 ```
 
 ### Layout Interface
 
 ```v
 interface Layout {
-    arrange(windows []Window, work_area ScreenRect) []WindowUpdate
-    add(window &Window, work_area ScreenRect) InitialPosition
-    remove(removed_id u32, windows []Window, work_area ScreenRect) []WindowUpdate
-    promote(window_id u32, windows []Window, work_area ScreenRect) []WindowUpdate  // Move window to master
-    demote(window_id u32, windows []Window, work_area ScreenRect) []WindowUpdate    // Move window to stack
-    swap_up(window_id u32, windows []Window, work_area ScreenRect) []WindowUpdate   // Reorder within stack
-    swap_down(window_id u32, windows []Window, work_area ScreenRect) []WindowUpdate // Reorder within stack
+    arrange(windows []WindowSpec, work_area ScreenRect) []WindowUpdate
 }
 ```
+
+It is the responsibility of the `Workspace` to add and remove windows from its
+internal `windows` array. (This includes moving windows up and down the list to
+alter their position in the layout.) It then calls the `Layout` with its
+window list and work area coordinates to actually arrange the windows, which
+returns a list of window updates. Then, those updates gets passed (with the
+workspace's window list) back to the `WindowManager` to tell X11 to make the
+same updates.
+
+Once X11 has successfully updated, the `Workspace` is told to apply the
+`WindowUpdate` alterations to its internal `WindowSpec` objects. (So the objects
+reflect their new positions.)
 
 ### Key Implementation Notes
 - **Tiling layouts** recalculate all positions from scratch
@@ -518,10 +585,13 @@ interface Layout {
 - **WindowUpdate** contains only windows requiring actual changes:
   ```v
   struct WindowUpdate {
-      window_id u32
+      window_index int
       target_rect ScreenRect
   }
   ```
+
+The `window_index` number refers to an index in a workspace's array of windows 
+(passed into `arrange` as the `windows` parameter.)
 
 ### TilingLayout Implementation
 

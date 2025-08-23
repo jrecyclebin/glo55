@@ -1,6 +1,6 @@
 # Glo55 Window Manager - TODO List
 
-## Phase 1: Foundation and Basic Structure (1/4 complete)
+## Phase 1: Foundation and Basic Structure (4/4 complete)
 
 ### 1.1 Project Setup
 - [x] Create main.v as the entry point with basic main() function
@@ -21,10 +21,10 @@
 - [x] Define TilingLayout struct
 
 ### 1.4 Basic Event Handling
-- [ ] Define basic X11 event types
-- [ ] Create event dispatch system
-- [ ] Add basic event handler methods to WindowManager
-- [ ] Update main() with event loop
+- [x] Define basic X11 event types
+- [x] Create event dispatch system
+- [x] Add basic event handler methods to WindowManager
+- [x] Update main() with event loop
 
 ## Phase 2: Configuration System (0/4 complete)
 

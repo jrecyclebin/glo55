@@ -1,18 +1,18 @@
 # Glo55 Window Manager - TODO List
 
-## Phase 1: Foundation and Basic Structure (0/4 complete)
+## Phase 1: Foundation and Basic Structure (1/4 complete)
 
 ### 1.1 Project Setup
-- [ ] Create main.v as the entry point with basic main() function
-- [ ] Create directory structure: x11/ and glo55/
-- [ ] Create placeholder files for all major components
-- [ ] Create v.mod file with module configuration
+- [x] Create main.v as the entry point with basic main() function
+- [x] Create directory structure: x11/ and glo55/
+- [x] Create placeholder files for all major components
+- [x] Create v.mod file with module configuration
 
 ### 1.2 Basic X11 Integration
-- [ ] Define core X11 types (Client, Atom, X11Color, ScreenRect)
-- [ ] Implement X11 connection handling
-- [ ] Update main() to attempt X11 connection
-- [ ] Add basic logging using V's log module
+- [x] Define core X11 types (Client, Atom, X11Color, ScreenRect)
+- [x] Implement X11 connection handling
+- [x] Update main() to attempt X11 connection
+- [x] Add basic logging using V's log module
 
 ### 1.3 Core Data Structures
 - [ ] Define WindowManager struct with monitors, layouts, draw

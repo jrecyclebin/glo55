@@ -1,0 +1,22 @@
+# V executable outputs
+*.exe
+*.tmp
+
+# V modules cache
+.vmodules/
+
+# Build artifacts
+dist/
+*.o
+*.a
+*.so
+
+# Personal files
+.private-journal/**/*.embedding
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db

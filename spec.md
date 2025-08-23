@@ -15,6 +15,7 @@ glo55/
     ├── config.v        # Configuration loading and management
     ├── drawing.v       # Drawing to an X11 graphics context
     ├── element.v       # Element accessors and rendering
+    ├── layout.v        # Window layout interface and TilingLayout logic
     ├── theme.v         # Theme loading and variable replacement
     ├── window_manager.v # Core window management logic
     └── workspace.v     # Workspace and monitor management
@@ -34,6 +35,15 @@ glo55/
 - Fonts are loading using XftFontOpenName rather than XLoadFont.
 - Text must be UTF-8, so XftDrawStringUtf8 is used to draw text.
 
+Some basics:
+```v
+type Client = u64 // client is the term for an X11 window 
+type Atom = u64
+type X11Color = u64
+```
+
+X11 measurement types are: x int, y int, width u32, height 32.
+
 #### Configuration (glo55/config.v)
 - `Config` struct with configuration data
 - `Config.load()` static method for loading config.toml
@@ -47,12 +57,14 @@ glo55/
 - `drawingCtx.load_fonts(font_specs []string)` to load fonts. Returns an array
    of internal `Font` objects.
 
-
 #### Element Rendering (glo55/element.v)
 - `Element` struct with element type and properties
 - `Element.load()` static method for loading theme.toml
 - `element.render()` for solid, gradient, image, pattern, and text types
-- `Area` struct for positioning, the left/top/right/bottom settings.
+
+#### Layout System (glo55/layout.v)
+- `Layout` interface (see later in this doc)
+- `TitlingLayout` struct that implements master/stack
 
 #### Theme System (glo55/theme.v)
 - `Theme` struct with theme data (arrays for `windows` and `toolbars` defined
@@ -61,10 +73,12 @@ glo55/
 - `theme.get_fonts()` method for getting a string array of fonts to load,
   compatible with `drawingCtx.load_fonts`.
 - Element rendering methods for solid, gradient, image, pattern, and text types
+- `ThemeArea` struct for positioning, the left/top/right/bottom settings.
 
 #### Window Manager (glo55/window_manager.v)
 - `WindowManager` struct containing all monitor and window state
 - Core window management operations
+- `WindowUpdate` struct for describing window operations
 - Integration with X11, config, and theme systems
 
 #### Workspace Management (glo55/workspace.v)
@@ -404,27 +418,36 @@ The following areas should be verified through functional testing rather than un
 **Internal Use Only** - no external consumers
 
 ##### Methods:
-- `handle_map_request(e XEvent, wa XWindowAttributes)`
+- `on_window_open(c Client, rect ScreenRect, border_width u32)`
   - Adds window to internal list
-  - Forwards to relevant `Monitor` based on `get_monitor_at(e.x, e.y)`
+  - Forwards to relevant `Monitor` based on what monitor is currently active
   - *Does not* position windows directly
-- `get_monitor_work_area(monitor_id u32) ScreenRect`
+  - Called by the MaqRequestEvent handler.
+- Other events: `on_button_press`, `on_screen_resize`, `on_window_close`,
+  `on_window_hover`, `on_key_press`, etc.
+- `get_monitor_work_area(monitor_id MonitorId) ScreenRect`
   - Returns X11 coordinates of usable area (excludes panels)
 - `get_monitor_at(x i32, y i32) ?MonitorId`
   - Determines physical monitor containing coordinates
+- `set_monitor_as_active(monitor_id MonitorId)`
+  - Sets the active Monitor (happens in `on_motion_notify`)
+
+```v
+type MonitorId = u32
+```
 
 #### `Monitor`
 **Role**: Per-display layout and window management
 
 ##### Methods:
-- `add_window(window_id u32, initial_rect ScreenRect)`
+- `add_window(c Client, initial_rect ScreenRect)`
   - Forces new windows into layout's starting position (e.g. master pane)
   - Floating windows preserve requested position
 - `arrange() []WindowUpdate`
   - *Full recalculation* of all window positions
   - Returns `WindowUpdate` structs for compositor to apply
   - Handles cases where windows exceed screen bounds (no clamping)
-- `remove_window(window_id u32)`
+- `remove_window(c Client)`
   - Triggers `arrange()` after removal
 
 #### `ScreenRect`

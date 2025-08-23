@@ -5,14 +5,14 @@ import x11
 // Layout interface for different window arrangement strategies
 pub interface Layout {
 	// Arrange windows within the given workspace area
-	arrange(workspace &Workspace, area ScreenRect) []WindowUpdate
+	arrange(workspace &Workspace, area x11.ScreenRect) []WindowUpdate
 }
 
 // Window update information for layout changes
 pub struct WindowUpdate {
 pub:
 	window_index int
-	target_rect  ScreenRect
+	target_rect  x11.ScreenRect
 }
 
 // Tiling layout implementation with master/stack configuration

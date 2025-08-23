@@ -3,6 +3,8 @@
 ## Overview
 This plan provides detailed, step-by-step implementation prompts for building Glo55. Each prompt is designed to be given to a development agent and includes context, requirements, and success criteria.
 
+PLEASE NOTE: This project comes with a Makefile that can be used to build, test, format and run this project.
+
 ## Phase 1: Foundation and Basic Structure
 
 ### 1.1 Project Setup

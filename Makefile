@@ -23,7 +23,7 @@ run: build
 
 # Run tests
 test:
-	$(V) run tests/core_test.v
+	$(V) test tests
 
 # Format all V files
 fmt:

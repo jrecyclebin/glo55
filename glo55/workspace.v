@@ -16,5 +16,5 @@ pub struct WindowSpec {
 pub:
 	info &Window
 mut:
-	rect ScreenRect
+	rect x11.ScreenRect
 }

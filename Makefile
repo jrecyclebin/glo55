@@ -19,7 +19,9 @@ build: $(DIST_DIR)
 
 # Build and run from dist/
 run: build
-	./$(BINARY_PATH)
+	Xephyr :80 &
+	sleep 1
+	DISPLAY=:80 ./$(BINARY_PATH)
 
 # Run tests
 test:

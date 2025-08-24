@@ -43,6 +43,10 @@ lint:
 # Development workflow
 dev: fmt check run
 
+# Lines of code estimate
+sloc:
+	find . -name "*.v" | xargs wc -l
+
 # Clean build artifacts (including dist folder)
 clean:
 	rm -rf $(DIST_DIR)
@@ -62,4 +66,4 @@ help:
 	@echo "  clean    - Remove dist/ and build artifacts"
 	@echo "  help     - Show this help message"
 
-.PHONY: all build run test fmt check lint dev clean help
+.PHONY: all build run test fmt check lint dev clean help sloc

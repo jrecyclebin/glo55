@@ -23,7 +23,10 @@ fn main() {
 	log.info('Screen dimensions: ${screen_rect.width}x${screen_rect.height}')
 
 	// Initialize window manager
-	mut wm := glo55.new_window_manager()
+	mut wm := glo55.new_window_manager(&conn) or {
+		log.error('Failed to initialize window manager: ${err}')
+		return
+	}
 	log.info('Window manager initialized')
 
 	// Set up signal handling for graceful shutdown
@@ -32,7 +35,7 @@ fn main() {
 	log.info('Starting main event loop')
 
 	// Run the simplified event loop
-	wm.event_loop(mut conn) or { log.error('Event loop failed: ${err}') }
+	wm.event_loop() or { log.error('Event loop failed: ${err}') }
 
 	log.info('Glo55 Window Manager shutting down gracefully')
 }

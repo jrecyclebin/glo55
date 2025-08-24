@@ -17,17 +17,23 @@ mut:
 	windows     []Window
 	running     bool
 	event_stats EventStats
+	conn        &x11.X11Connection = unsafe { nil }
+	root_window x11.Client
 	// Other global state will be added as needed
 }
 
 // Create new window manager
-pub fn new_window_manager() WindowManager {
+pub fn new_window_manager(conn &x11.X11Connection) !WindowManager {
+  root_window := conn.setup_root_window()
+
 	return WindowManager{
 		monitors:    []
 		layouts:     []
 		draw:        DrawingContext{}
 		windows:     []
 		running:     true
+		conn:        unsafe { conn }
+		root_window: root_window
 		event_stats: EventStats{
 			total_events:       0
 			key_press_events:   0
@@ -72,7 +78,7 @@ mut:
 }
 
 // Simplified event loop function that handles events directly
-pub fn (mut wm WindowManager) event_loop(mut conn x11.X11Connection) ! {
+pub fn (mut wm WindowManager) event_loop() ! {
 	mut running := true
 	mut event_count := u64(0)
 	start_time := time.now()
@@ -81,10 +87,10 @@ pub fn (mut wm WindowManager) event_loop(mut conn x11.X11Connection) ! {
 
 	for running {
 		// Check for pending events
-		if conn.pending_events() {
+		if wm.conn.pending_events() {
 			// Process all available events
-			for conn.pending_events() && running {
-				mut event := conn.next_event() or {
+			for wm.conn.pending_events() && running {
+				mut event := wm.conn.next_event() or {
 					log.error('Failed to get next event: ${err}')
 					continue
 				}
@@ -108,7 +114,7 @@ pub fn (mut wm WindowManager) event_loop(mut conn x11.X11Connection) ! {
 		}
 
 		// Flush any pending output
-		conn.flush()
+		wm.conn.flush()
 
 		// Log statistics periodically
 		if event_count % 100 == 0 && event_count > 0 {

@@ -14,18 +14,6 @@ pub type Client = u64
 pub type Atom = u64
 pub type X11Color = u64
 
-// C types
-@[typedef]
-struct C.XWindowAttributes {
-	x            int
-	y            int
-	width        int
-	height       int
-	border_width int
-	depth        int
-	// ... other fields we don't need for now
-}
-
 // X11 Event structure (simplified)
 @[typedef]
 struct C.XEvent {

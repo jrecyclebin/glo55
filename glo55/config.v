@@ -4,6 +4,11 @@ import os
 import toml
 import log
 
+pub const min_border_width = 0
+pub const max_border_width = 50
+pub const min_gap_size = 0
+pub const max_gap_size = 100
+
 // MonitorConfig defines per-monitor configuration
 pub struct MonitorConfig {
 pub:
@@ -13,7 +18,7 @@ pub:
 // Configuration file search paths in order of precedence
 const config_search_paths = [
 	'./glo55.toml', // Current directory
-	'${os.home_dir()}/.config/glo55/config.toml', // User config
+	'~/.config/glo55/config.toml', // User config
 	'/etc/glo55/config.toml', // System config
 ]
 
@@ -41,28 +46,11 @@ pub fn load_config_into(mut target ConfigTarget) ! {
 
 // Load configuration from specific file path directly into ConfigTarget object
 pub fn load_config_into_from_file(mut target ConfigTarget, path string) ! {
-	// Check if file exists
-	if !os.exists(path) {
-		return error('Configuration file not found: ${path}')
-	}
-
-	// Read file content
-	content := os.read_file(path) or {
-		return error('Failed to read configuration file ${path}: ${err}')
-	}
-
-	if content.len == 0 {
-		log.warn('Configuration file ${path} is empty, keeping defaults')
-		return
-	}
-
 	// Parse TOML content
-	parsed_toml := toml.parse_text(content) or {
-		return error('Failed to parse TOML in ${path}: ${err}')
-	}
+	parsed_toml := toml.parse_file(path)!
 
 	// Apply TOML values directly to the target object
-	apply_toml_to_target(mut target, parsed_toml, path)!
+	load_config_root(mut target, parsed_toml, path)
 	
 	log.info('Configuration loaded successfully from ${path}')
 }
@@ -83,93 +71,95 @@ fn find_config_file() !string {
 }
 
 // Apply parsed TOML values directly to ConfigTarget object with validation
-fn apply_toml_to_target(mut target ConfigTarget, doc toml.Doc, source_path string) ! {
+fn load_config_root(mut target ConfigTarget, doc toml.Doc, source_path string) {
+	root := doc.to_any()
+
 	// Parse window manager settings
-	if border_width := get_toml_int(doc, 'border_width') {
-		if border_width < 0 || border_width > 50 {
-			return error('Invalid border_width in ${source_path}: must be between 0 and 50, got ${border_width}')
-		}
-		target.border_width = border_width
+	if bw := get_toml_int(root, 'border_width', min_border_width, max_border_width) {
+		target.border_width = bw
 	}
 
-	if gap_size := get_toml_int(doc, 'gap_size') {
-		if gap_size < 0 || gap_size > 100 {
-			return error('Invalid gap_size in ${source_path}: must be between 0 and 100, got ${gap_size}')
-		}
+	if gap_size := get_toml_int(root, 'gap_size', min_gap_size, max_gap_size) {
 		target.gap_size = gap_size
 	}
 
-	if focus_follows_mouse := get_toml_bool(doc, 'focus_follows_mouse') {
+	if focus_follows_mouse := get_toml_bool(root, 'focus_follows_mouse') {
 		target.focus_follows_mouse = focus_follows_mouse
 	}
 
-	if theme_name := get_toml_string(doc, 'theme_name') {
-		if theme_name.len == 0 {
-			return error('Invalid theme_name in ${source_path}: cannot be empty')
-		}
+	if theme_name := get_toml_string(root, 'theme_name') {
 		target.theme_name = theme_name
 	}
 
 	// Parse keybindings section
-	if keybindings_section := get_toml_table(doc, 'keybindings') {
-		target.keybindings = parse_keybindings(keybindings_section, source_path)!
+	if keybindings_section := get_toml_table(root, 'keybindings') {
+		target.keybindings = parse_keybindings(keybindings_section, source_path)
 	}
 
 	// Parse monitors section
-	if monitors_section := get_toml_table(doc, 'monitors') {
-		target.monitor_configs = parse_monitors(monitors_section, source_path)!
+	if monitors_section := get_toml_table(root, 'monitors') {
+		target.monitor_configs = parse_monitors(monitors_section, source_path)
 	}
 }
 
 // Utility functions for safely accessing TOML values
 
 // Get integer value from TOML document
-fn get_toml_int(doc toml.Doc, key string) ?int {
+fn get_toml_int(doc toml.Any, key string, min int, max int) ?int {
 	val := doc.value_opt(key) or { return none }
-	return val.int()
+	num := val.int()
+	if num < min {
+		log.warn('config.toml ${key} must be at least ${min} but is ${num}')
+		return min
+	}
+	if num > max {
+		log.warn('config.toml ${key} must be no more than ${max} but is ${num}')
+		return max
+	}
+	return num
 }
 
 // Get boolean value from TOML document
-fn get_toml_bool(doc toml.Doc, key string) ?bool {
+fn get_toml_bool(doc toml.Any, key string) ?bool {
 	val := doc.value_opt(key) or { return none }
 	return val.bool()
 }
 
 // Get string value from TOML document
-fn get_toml_string(doc toml.Doc, key string) ?string {
+fn get_toml_string(doc toml.Any, key string) ?string {
 	val := doc.value_opt(key) or { return none }
 	return val.string()
 }
 
 // Get string array value from TOML document
-fn get_toml_string_array(doc toml.Doc, key string) ?[]string {
+fn get_toml_string_array(doc toml.Any, key string) ?[]string {
 	val := doc.value_opt(key) or { return none }
 	return val.array().map(it.string())
 }
 
 // Get table from TOML document
-fn get_toml_table(doc toml.Doc, key string) ?toml.Any {
+fn get_toml_table(doc toml.Any, key string) ?toml.Any {
 	val := doc.value_opt(key) or { return none }
 	return val
 }
 
 // Parse keybindings from TOML section
-fn parse_keybindings(keybindings_val toml.Any, source_path string) !map[string]string {
+fn parse_keybindings(keybindings_val toml.Any, source_path string) map[string]string {
 	mut keybindings := map[string]string{}
 	
 	// Get the keybindings as a map
 	bindings_map := keybindings_val.as_map()
 	for key, value in bindings_map {
 		// Validate key combination format
-		validate_keybinding(key, source_path)!
+		validate_keybinding(key, source_path) or { continue }
 		
 		// Get command string
 		command := value.string()
 		if command.trim_space().len == 0 {
-			return error('Invalid keybinding in ${source_path}: command for key "${key}" cannot be empty')
+			log.warn('Invalid keybinding in ${source_path}: command for key "${key}" cannot be empty')
+		} else {
+			keybindings[key] = command
 		}
-		
-		keybindings[key] = command
 	}
 	
 	return keybindings
@@ -213,7 +203,7 @@ fn validate_keybinding(key string, source_path string) ! {
 }
 
 // Parse monitors configuration from TOML section
-fn parse_monitors(monitors_val toml.Any, source_path string) ![]MonitorConfig {
+fn parse_monitors(monitors_val toml.Any, source_path string) []MonitorConfig {
 	mut monitors := []MonitorConfig{}
 	
 	// Try to get monitors as an array
@@ -221,12 +211,12 @@ fn parse_monitors(monitors_val toml.Any, source_path string) ![]MonitorConfig {
 	if monitors_array.len > 0 {
 		// Array of monitor configurations
 		for i, monitor_val in monitors_array {
-			monitor_config := parse_single_monitor(monitor_val, i, source_path)!
+			monitor_config := parse_single_monitor(monitor_val, i, source_path) or { continue }
 			monitors << monitor_config
 		}
 	} else {
 		// Single monitor configuration (not an array)
-		monitor_config := parse_single_monitor(monitors_val, 0, source_path)!
+		monitor_config := parse_single_monitor(monitors_val, 0, source_path) or { return monitors }
 		monitors << monitor_config
 	}
 	
@@ -235,15 +225,12 @@ fn parse_monitors(monitors_val toml.Any, source_path string) ![]MonitorConfig {
 
 // Parse a single monitor configuration
 fn parse_single_monitor(monitor_val toml.Any, index int, source_path string) !MonitorConfig {
-	monitor_map := monitor_val.as_map()
-	
 	mut workspaces := []string{}
 	
 	// Parse workspaces array
-	if workspace_val := monitor_map['workspaces'] {
-		workspace_array := workspace_val.array()
+  if workspace_array := get_toml_string_array(monitor_val, 'workspaces') {
 		for j, ws_val in workspace_array {
-			workspace_name := ws_val.string().trim_space()
+			workspace_name := ws_val.trim_space()
 			if workspace_name.len == 0 {
 				return error('Invalid monitor config in ${source_path}: workspace name at monitor ${index}, workspace ${j} cannot be empty')
 			}
@@ -272,12 +259,12 @@ fn parse_single_monitor(monitor_val toml.Any, index int, source_path string) !Mo
 
 // Validate configuration values for any ConfigTarget object
 pub fn validate_config_target(target ConfigTarget) ! {
-	if target.border_width < 0 || target.border_width > 50 {
-		return error('Invalid border_width: must be between 0 and 50, got ${target.border_width}')
+	if target.border_width < min_border_width || target.border_width > max_border_width {
+		return error('Invalid border_width: must be between ${min_border_width} and ${max_border_width}, got ${target.border_width}')
 	}
 
-	if target.gap_size < 0 || target.gap_size > 100 {
-		return error('Invalid gap_size: must be between 0 and 100, got ${target.gap_size}')
+	if target.gap_size < min_gap_size || target.gap_size > max_gap_size {
+		return error('Invalid gap_size: must be between ${min_gap_size} and ${max_gap_size}, got ${target.gap_size}')
 	}
 
 	if target.theme_name.len == 0 {

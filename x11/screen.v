@@ -17,8 +17,11 @@ fn C.XSelectInput(&C.Display, Client, i32)
 // C types
 @[typedef]
 struct C.Display {}
+
 struct C.Pixmap {}
+
 struct C.Colormap {}
+
 type C.Cursor = int
 
 @[typedef]
@@ -42,11 +45,11 @@ struct C.XSetWindowAttributes {
 
 @[typedef]
 struct C.XWindowAttributes {
-	x                     int
-	y                     int
-	width                 int
-	height                int
-	border_width          int
+	x            int
+	y            int
+	width        int
+	height       int
+	border_width int
 }
 
 // X11 connection handle
@@ -99,14 +102,11 @@ pub fn (conn X11Connection) setup_root_window() Client {
 	screen := C.XDefaultScreen(conn.display)
 	root_window := C.XRootWindow(conn.display, screen)
 
-  // Set event mask and cursor for root window
-	cursor := C.XCreateFontCursor(conn.display, x11.xc_left_ptr)
-	wa := C.XSetWindowAttributes {
-		event_mask: substructure_redirect_mask | substructure_notify_mask |
-		  button_press_mask | button_press_mask | pointer_motion_mask |
-			enter_window_mask | leave_window_mask | structure_notify_mask |
-			property_change_mask,
-		cursor: cursor
+	// Set event mask and cursor for root window
+	cursor := C.XCreateFontCursor(conn.display, xc_left_ptr)
+	wa := C.XSetWindowAttributes{
+		event_mask: substructure_redirect_mask | substructure_notify_mask | button_press_mask | button_press_mask | pointer_motion_mask | enter_window_mask | leave_window_mask | structure_notify_mask | property_change_mask
+		cursor:     cursor
 	}
 	C.XChangeWindowAttributes(conn.display, root_window, cw_event_mask | cw_cursor, &wa)
 	C.XSelectInput(conn.display, root_window, wa.event_mask)

@@ -24,7 +24,7 @@ mut:
 
 // Create new window manager
 pub fn new_window_manager(conn &x11.X11Connection) !WindowManager {
-  root_window := conn.setup_root_window()
+	root_window := conn.setup_root_window()
 
 	return WindowManager{
 		monitors:    []

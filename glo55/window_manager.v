@@ -19,6 +19,7 @@ mut:
 	gap_size            int               = 10
 	focus_follows_mouse bool              = true
 	theme_name          string            = 'default'
+	monitor_configs     []MonitorConfig
 	keybindings         map[string]string
 	workspace_names     []string          = ['1', '2', '3', '4', '5']
 	

@@ -136,21 +136,21 @@ workspaces = ["terminal", "browser", "documents", "4", "5", "6", "7", "8", "9", 
 # ... etc
 
 # Move window to workspace  
-"Mod+Shift+1" = "move_window_to_workspace 1"
-"Mod+Shift+2" = "move_window_to_workspace 2"
+"Mod+Shift+1" = "warp 1"
+"Mod+Shift+2" = "warp 2"
 # ... etc
 
 # Window focus navigation
-"Mod+j" = "focus_down"
-"Mod+k" = "focus_up" 
-"Mod+h" = "focus_left"
-"Mod+l" = "focus_right"
+"Mod+j" = "focus down"
+"Mod+k" = "focus up" 
+"Mod+h" = "focus left"
+"Mod+l" = "focus right"
 
 # Window movement
-"Mod+Shift+j" = "move_down"
-"Mod+Shift+k" = "move_up"
-"Mod+Shift+h" = "move_left"
-"Mod+Shift+l" = "move_right"
+"Mod+Shift+j" = "move down"
+"Mod+Shift+k" = "move up"
+"Mod+Shift+h" = "move left"
+"Mod+Shift+l" = "move right"
 
 # Launch terminal
 "Mod+Shift+Enter" = "exec kitty"
@@ -220,7 +220,6 @@ pattern_path = "patterns/grid.png"
 [[windows]]
 border_width = 2
 window_gap = 4
-focus_behavior = "follow_mouse"
 
 # Window state overrides
 [windows.focused]
@@ -257,7 +256,6 @@ back = "$secondary_color"
 direction = 90
 
 [[toolbars]]
-monitor = 0
 border_width = 1
 
 # Toolbar state overrides
@@ -283,7 +281,6 @@ font = "monospace"
 size = 10
 
 [[toolbars]]
-monitor = 1
 border_width = 1
 
 [toolbars.clock]

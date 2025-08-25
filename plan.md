@@ -217,7 +217,8 @@ Implement the theme system foundation:
    - Define struct Theme with vars map[string]string, windows []WindowTheme, toolbars []ToolbarTheme
    - Define struct WindowTheme with border_width u32, window_gap u32, focus_behavior string
    - Define struct ToolbarTheme with monitor int, border_width u32
-   - Implement Theme.from_toml() static method
+   - Implement load_theme_into function, based on load_config_info and using its
+     same utility functions
 
 2. Implement variable substitution system:
    - Parse variables with $variable_name syntax

@@ -7,7 +7,7 @@ import log
 // Configuration file search paths in order of precedence
 const config_search_paths = [
 	'./glo55.toml', // Current directory
-	'${os.home_dir()}/config/glo55/config.toml', // User config
+	'${os.home_dir()}/.config/glo55/config.toml', // User config
 	'/etc/glo55/config.toml', // System config
 ]
 

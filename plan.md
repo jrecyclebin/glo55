@@ -177,10 +177,9 @@ Success criteria:
 Implement the main configuration structure:
 
 1. In glo55/config.v:
-   - Define struct Config with monitors []MonitorConfig, keybindings map[string]string
+   - Add to ConfigTarget: monitors []MonitorConfig, keybindings map[string]string
    - Define struct MonitorConfig with workspaces []string
-   - Implement Config.from_toml() static method
-   - Add methods for accessing keyboard shortcuts and workspace names
+   - Load monitor configs and keybindings in apply_toml_to_target
 
 2. Implement keybinding parsing:
    - Parse key combinations like "Mod+1", "Mod+Shift+Enter"

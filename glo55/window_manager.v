@@ -7,13 +7,22 @@ import time
 // Monitor identifier type
 pub type MonitorId = int
 
-// Core window manager structure
+// Core window manager structure that implements ConfigTarget
 pub struct WindowManager {
 pub:
 	monitors []Monitor
 	layouts  []Layout
 	draw     DrawingContext
 mut:
+	// ConfigTarget properties - window manager configuration
+	border_width        int               = 2
+	gap_size            int               = 10
+	focus_follows_mouse bool              = true
+	theme_name          string            = 'default'
+	keybindings         map[string]string
+	workspace_names     []string          = ['1', '2', '3', '4', '5']
+	
+	// Window manager state
 	windows     []Window
 	running     bool
 	event_stats EventStats
@@ -26,14 +35,15 @@ mut:
 pub fn new_window_manager(conn &x11.X11Connection) !WindowManager {
 	root_window := conn.setup_root_window()
 
-	return WindowManager{
-		monitors:    []
-		layouts:     []
-		draw:        DrawingContext{}
-		windows:     []
-		running:     true
-		conn:        unsafe { conn }
-		root_window: root_window
+	// Create window manager with defaults
+	mut wm := WindowManager{
+		monitors:            []
+		layouts:             []
+		draw:                DrawingContext{}
+		windows:             []
+		running:             true
+		conn:                unsafe { conn }
+		root_window:         root_window
 		event_stats: EventStats{
 			total_events:       0
 			key_press_events:   0
@@ -45,6 +55,16 @@ pub fn new_window_manager(conn &x11.X11Connection) !WindowManager {
 			last_event_time:    time.now()
 		}
 	}
+
+	// Load configuration directly into WindowManager
+	load_config_into(mut wm) or {
+		log.warn('Failed to load configuration file: ${err}')
+		log.info('Using default configuration values')
+	}
+
+	log.info('Configuration loaded: border_width=${wm.border_width}, gap_size=${wm.gap_size}, focus_follows_mouse=${wm.focus_follows_mouse}, theme=${wm.theme_name}')
+
+	return wm
 }
 
 // Event processing statistics

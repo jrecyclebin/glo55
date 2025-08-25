@@ -3,6 +3,18 @@ module tests
 import os
 import glo55
 
+// Simple test implementation of ConfigTarget for testing
+struct TestConfigTarget {
+mut:
+	// ConfigTarget properties
+	border_width        int               = 2
+	gap_size            int               = 10
+	focus_follows_mouse bool              = true
+	theme_name          string            = 'default'
+	keybindings         map[string]string
+	workspace_names     []string          = ['1', '2', '3', '4', '5']
+}
+
 // Test loading valid TOML files
 fn test_config_load_valid_toml() {
 	// Create a temporary valid config file
@@ -17,17 +29,18 @@ theme_name = "dark"
 	os.write_file(test_file, test_content) or { assert false, 'Failed to write test config file' }
 	defer { os.rm(test_file) or {} }
 
-	// Load configuration from file
-	config := glo55.Config.from_file(test_file) or {
+	// Load configuration directly into test target
+	mut target := TestConfigTarget{}
+	glo55.load_config_into_from_file(mut target, test_file) or {
 		assert false, 'Failed to load valid config: ${err}'
 		return
 	}
 
 	// Verify parsed values
-	assert config.border_width == 5
-	assert config.gap_size == 15
-	assert config.focus_follows_mouse == false
-	assert config.theme_name == 'dark'
+	assert target.border_width == 5
+	assert target.gap_size == 15
+	assert target.focus_follows_mouse == false
+	assert target.theme_name == 'dark'
 }
 
 // Test error handling for malformed files
@@ -46,7 +59,8 @@ gap_size = "not_a_number"
 	defer { os.rm(test_file) or {} }
 
 	// Attempt to load malformed file should fail
-	config := glo55.Config.from_file(test_file) or {
+	mut target := TestConfigTarget{}
+	glo55.load_config_into_from_file(mut target, test_file) or {
 		// This should fail - error expected
 		assert err.msg().contains('Failed to parse TOML')
 		return
@@ -65,7 +79,8 @@ fn test_config_validation_errors() {
 	}
 	defer { os.rm(test_file) or {} }
 
-	config := glo55.Config.from_file(test_file) or {
+	mut target := TestConfigTarget{}
+	glo55.load_config_into_from_file(mut target, test_file) or {
 		assert err.msg().contains('Invalid border_width')
 		assert err.msg().contains('must be between 0 and 50')
 		return
@@ -78,7 +93,8 @@ fn test_config_validation_errors() {
 	os.write_file(test_file2, invalid_gap_content) or { assert false, 'Failed to write test file' }
 	defer { os.rm(test_file2) or {} }
 
-	config2 := glo55.Config.from_file(test_file2) or {
+	mut target2 := TestConfigTarget{}
+	glo55.load_config_into_from_file(mut target2, test_file2) or {
 		assert err.msg().contains('Invalid gap_size')
 		assert err.msg().contains('must be between 0 and 100')
 		return
@@ -91,7 +107,8 @@ fn test_config_validation_errors() {
 	os.write_file(test_file3, empty_theme_content) or { assert false, 'Failed to write test file' }
 	defer { os.rm(test_file3) or {} }
 
-	config3 := glo55.Config.from_file(test_file3) or {
+	mut target3 := TestConfigTarget{}
+	glo55.load_config_into_from_file(mut target3, test_file3) or {
 		assert err.msg().contains('Invalid theme_name')
 		assert err.msg().contains('cannot be empty')
 		return
@@ -102,7 +119,8 @@ fn test_config_validation_errors() {
 // Test file path resolution
 fn test_config_file_path_resolution() {
 	// Test nonexistent file
-	config := glo55.Config.from_file('/nonexistent/path/config.toml') or {
+	mut target := TestConfigTarget{}
+	glo55.load_config_into_from_file(mut target, '/nonexistent/path/config.toml') or {
 		assert err.msg().contains('Configuration file not found')
 		return
 	}
@@ -117,17 +135,18 @@ fn test_config_load_empty_file() {
 	defer { os.rm(test_file) or {} }
 
 	// Load configuration from empty file
-	config := glo55.Config.from_file(test_file) or {
+	mut target := TestConfigTarget{}
+	glo55.load_config_into_from_file(mut target, test_file) or {
 		assert false, 'Failed to load empty config: ${err}'
 		return
 	}
 
-	// Should use default values
-	default_config := glo55.Config.default()
-	assert config.border_width == default_config.border_width
-	assert config.gap_size == default_config.gap_size
-	assert config.focus_follows_mouse == default_config.focus_follows_mouse
-	assert config.theme_name == default_config.theme_name
+	// Should keep default values (since empty file doesn't override anything)
+	default_target := TestConfigTarget{}
+	assert target.border_width == default_target.border_width
+	assert target.gap_size == default_target.gap_size
+	assert target.focus_follows_mouse == default_target.focus_follows_mouse
+	assert target.theme_name == default_target.theme_name
 }
 
 // Test partial configuration (some values present, others default)
@@ -145,40 +164,41 @@ theme_name = "minimal"
 	defer { os.rm(test_file) or {} }
 
 	// Load configuration from file
-	config := glo55.Config.from_file(test_file) or {
+	mut target := TestConfigTarget{}
+	glo55.load_config_into_from_file(mut target, test_file) or {
 		assert false, 'Failed to load partial config: ${err}'
 		return
 	}
 
 	// Verify specified values are loaded and others use defaults
-	assert config.border_width == 3
-	assert config.theme_name == 'minimal'
+	assert target.border_width == 3
+	assert target.theme_name == 'minimal'
 
 	// These should be defaults since not specified
-	default_config := glo55.Config.default()
-	assert config.gap_size == default_config.gap_size
-	assert config.focus_follows_mouse == default_config.focus_follows_mouse
+	default_target := TestConfigTarget{}
+	assert target.gap_size == default_target.gap_size
+	assert target.focus_follows_mouse == default_target.focus_follows_mouse
 }
 
 // Test configuration validation after loading
 fn test_config_struct_validation() {
 	// Test valid configuration
-	valid_config := glo55.Config{
+	valid_target := TestConfigTarget{
 		border_width:        5
 		gap_size:            20
 		focus_follows_mouse: true
 		theme_name:          'test'
 	}
-	valid_config.validate() or { assert false, 'Valid config should pass validation: ${err}' }
+	glo55.validate_config_target(valid_target) or { assert false, 'Valid config should pass validation: ${err}' }
 
 	// Test invalid border width
-	invalid_config1 := glo55.Config{
+	invalid_target1 := TestConfigTarget{
 		border_width:        -1
 		gap_size:            10
 		focus_follows_mouse: true
 		theme_name:          'test'
 	}
-	invalid_config1.validate() or {
+	glo55.validate_config_target(invalid_target1) or {
 		assert err.msg().contains('Invalid border_width')
 		return
 	}

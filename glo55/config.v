@@ -11,28 +11,54 @@ const config_search_paths = [
 	'/etc/glo55/config.toml', // System config
 ]
 
-// Configuration structure
-pub struct Config {
-pub mut:
-	// Window manager configuration
-	border_width        int  = 2
-	gap_size            int  = 10
-	focus_follows_mouse bool = true
-
-	// Theme configuration (will be expanded later)
-	theme_name string = 'default'
+// ConfigTarget interface defines objects that can receive configuration
+// Uses V's structural interfaces - any object with these properties implements ConfigTarget
+pub interface ConfigTarget {
+mut:
+	// Window manager settings
+	border_width        int
+	gap_size            int
+	focus_follows_mouse bool
+	theme_name          string
+	
+	// Future extensibility for keybindings and workspace configuration
+	keybindings         map[string]string
+	workspace_names     []string
 }
 
-// Load configuration from TOML file with fallback to defaults
-pub fn Config.load() !Config {
+// Load configuration directly into any ConfigTarget object
+pub fn load_config_into(mut target ConfigTarget) ! {
 	// Try to find and load config file
 	config_path := find_config_file()!
-	return load_config_from_file(config_path)!
+	load_config_into_from_file(mut target, config_path)!
 }
 
-// Load configuration from specific file path
-pub fn Config.from_file(path string) !Config {
-	return load_config_from_file(path)!
+// Load configuration from specific file path directly into ConfigTarget object
+pub fn load_config_into_from_file(mut target ConfigTarget, path string) ! {
+	// Check if file exists
+	if !os.exists(path) {
+		return error('Configuration file not found: ${path}')
+	}
+
+	// Read file content
+	content := os.read_file(path) or {
+		return error('Failed to read configuration file ${path}: ${err}')
+	}
+
+	if content.len == 0 {
+		log.warn('Configuration file ${path} is empty, keeping defaults')
+		return
+	}
+
+	// Parse TOML content
+	parsed_toml := toml.parse_text(content) or {
+		return error('Failed to parse TOML in ${path}: ${err}')
+	}
+
+	// Apply TOML values directly to the target object
+	apply_toml_to_target(mut target, parsed_toml, path)!
+	
+	log.info('Configuration loaded successfully from ${path}')
 }
 
 // Find the first available configuration file
@@ -50,64 +76,36 @@ fn find_config_file() !string {
 	return error('No configuration file found. Searched: ${searched_paths}')
 }
 
-// Load and parse TOML configuration from file
-fn load_config_from_file(path string) !Config {
-	// Check if file exists
-	if !os.exists(path) {
-		return error('Configuration file not found: ${path}')
-	}
-
-	// Read file content
-	content := os.read_file(path) or {
-		return error('Failed to read configuration file ${path}: ${err}')
-	}
-
-	if content.len == 0 {
-		log.warn('Configuration file ${path} is empty, using defaults')
-		return Config{}
-	}
-
-	// Parse TOML content
-	parsed_toml := toml.parse_text(content) or {
-		return error('Failed to parse TOML in ${path}: ${err}')
-	}
-
-	// Convert TOML to Config struct
-	return toml_to_config(parsed_toml, path)!
-}
-
-// Convert parsed TOML to Config struct with validation
-fn toml_to_config(doc toml.Doc, source_path string) !Config {
-	mut config := Config{}
-
+// Apply parsed TOML values directly to ConfigTarget object with validation
+fn apply_toml_to_target(mut target ConfigTarget, doc toml.Doc, source_path string) ! {
 	// Parse window manager settings
 	if border_width := get_toml_int(doc, 'border_width') {
 		if border_width < 0 || border_width > 50 {
 			return error('Invalid border_width in ${source_path}: must be between 0 and 50, got ${border_width}')
 		}
-		config.border_width = border_width
+		target.border_width = border_width
 	}
 
 	if gap_size := get_toml_int(doc, 'gap_size') {
 		if gap_size < 0 || gap_size > 100 {
 			return error('Invalid gap_size in ${source_path}: must be between 0 and 100, got ${gap_size}')
 		}
-		config.gap_size = gap_size
+		target.gap_size = gap_size
 	}
 
 	if focus_follows_mouse := get_toml_bool(doc, 'focus_follows_mouse') {
-		config.focus_follows_mouse = focus_follows_mouse
+		target.focus_follows_mouse = focus_follows_mouse
 	}
 
 	if theme_name := get_toml_string(doc, 'theme_name') {
 		if theme_name.len == 0 {
 			return error('Invalid theme_name in ${source_path}: cannot be empty')
 		}
-		config.theme_name = theme_name
+		target.theme_name = theme_name
 	}
 
-	log.info('Configuration loaded successfully from ${source_path}')
-	return config
+	// TODO: Add parsing for keybindings and workspace_names when they're needed
+	// For now, these remain as empty/default values set in the struct definitions
 }
 
 // Utility functions for safely accessing TOML values
@@ -130,22 +128,17 @@ fn get_toml_string(doc toml.Doc, key string) ?string {
 	return val.string()
 }
 
-// Get default configuration
-pub fn Config.default() Config {
-	return Config{}
-}
-
-// Validate configuration values
-pub fn (config Config) validate() ! {
-	if config.border_width < 0 || config.border_width > 50 {
-		return error('Invalid border_width: must be between 0 and 50, got ${config.border_width}')
+// Validate configuration values for any ConfigTarget object
+pub fn validate_config_target(target ConfigTarget) ! {
+	if target.border_width < 0 || target.border_width > 50 {
+		return error('Invalid border_width: must be between 0 and 50, got ${target.border_width}')
 	}
 
-	if config.gap_size < 0 || config.gap_size > 100 {
-		return error('Invalid gap_size: must be between 0 and 100, got ${config.gap_size}')
+	if target.gap_size < 0 || target.gap_size > 100 {
+		return error('Invalid gap_size: must be between 0 and 100, got ${target.gap_size}')
 	}
 
-	if config.theme_name.len == 0 {
+	if target.theme_name.len == 0 {
 		return error('Invalid theme_name: cannot be empty')
 	}
 }

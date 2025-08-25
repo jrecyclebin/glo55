@@ -48,9 +48,9 @@ type X11Color = u64
 X11 measurement types are: x int, y int, width u32, height u32.
 
 #### Configuration (glo55/config.v)
-- `Config` struct with configuration data
-- `Config.from_toml()` static method for loading config.toml
-- Methods for accessing keyboard shortcuts and workspace names
+- `load_config_into(mut ConfigTarget ct)` reads from TOML and sets properties
+  in objects that implement the ConfigTarget interface.
+- WindowManager, in this case, will implement the interface.
 
 #### Configuration (glo55/drawing.v)
 - `DrawingContext` struct with screen, root window, graphics context, everything
@@ -72,10 +72,11 @@ X11 measurement types are: x int, y int, width u32, height u32.
 - `TilingLayout` struct that implements master/stack
 
 #### Theme System (glo55/theme.v)
-- `Theme` struct with theme data (arrays for `windows` and `toolbars` defined
-   by the theme)
-- `Theme.from_toml()` static method for loading from theme.toml
-- `thm.get_fonts()` method for getting a string array of fonts to load,
+- `ThemeTarget` interface with theme data (arrays for `windows` and `toolbars`
+   defined by the theme)
+- `load_theme_into` function for loading theme.toml into an object that
+  implements the ThemeTarget interface.
+- `theme_get_fonts()` function for getting a string array of fonts to load,
   compatible with `drawing_ctx.load_fonts`.
 - Element rendering methods for solid, gradient, image, pattern, and text types
 - `ThemeArea` struct for positioning, the left/top/right/bottom settings.

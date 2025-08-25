@@ -13,7 +13,6 @@ mut:
 	theme_name          string            = 'default'
 	monitor_configs     []glo55.MonitorConfig
 	keybindings         map[string]string
-	workspace_names     []string          = ['1', '2', '3', '4', '5']
 }
 
 // Test loading valid TOML files
@@ -242,31 +241,6 @@ theme_name = "keybinding_test"
 	assert target.theme_name == 'keybinding_test'
 }
 
-// Test workspace names configuration
-fn test_config_load_workspace_names() {
-	workspace_content := '
-border_width = 4
-workspace_names = ["web", "dev", "mail", "music"]
-'
-
-	test_file := '/tmp/glo55_test_workspaces.toml'
-	os.write_file(test_file, workspace_content) or {
-		assert false, 'Failed to write workspace test file'
-	}
-	defer { os.rm(test_file) or {} }
-
-	// Load configuration
-	mut target := TestConfigTarget{}
-	glo55.load_config_into_from_file(mut target, test_file) or {
-		assert false, 'Failed to load workspace config: ${err}'
-		return
-	}
-
-	// Verify workspace names are loaded
-	assert target.workspace_names == ['web', 'dev', 'mail', 'music']
-	assert target.border_width == 4
-}
-
 // Test monitor configuration loading
 fn test_config_load_monitors() {
 	monitors_content := '
@@ -306,7 +280,6 @@ border_width = 1
 gap_size = 8
 focus_follows_mouse = false
 theme_name = "comprehensive_test"
-workspace_names = ["default", "work", "play"]
 
 [keybindings]
 "Mod+Return" = "exec terminal"
@@ -338,8 +311,6 @@ workspaces = ["1", "2"]
 	assert target.gap_size == 8
 	assert target.focus_follows_mouse == false
 	assert target.theme_name == 'comprehensive_test'
-	
-	assert target.workspace_names == ['default', 'work', 'play']
 	
 	assert target.keybindings['Mod+Return'] == 'exec terminal'
 	assert target.keybindings['Mod+d'] == 'launcher'
@@ -373,45 +344,6 @@ fn test_config_keybinding_validation_errors() {
 		return
 	}
 	assert false, 'Invalid keybinding format should fail validation'
-}
-
-// Test workspace validation errors
-fn test_config_workspace_validation_errors() {
-	// Test too many workspace names
-	too_many_workspaces := '
-workspace_names = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11"]
-'
-
-	test_file := '/tmp/glo55_test_too_many_workspaces.toml'
-	os.write_file(test_file, too_many_workspaces) or {
-		assert false, 'Failed to write workspace test file'
-	}
-	defer { os.rm(test_file) or {} }
-
-	mut target := TestConfigTarget{}
-	glo55.load_config_into_from_file(mut target, test_file) or {
-		assert err.msg().contains('maximum 10 workspaces allowed')
-		return
-	}
-	assert false, 'Too many workspaces should fail validation'
-
-	// Test empty workspace names
-	empty_workspace_content := '
-workspace_names = ["good", "", "also_good"]
-'
-
-	test_file2 := '/tmp/glo55_test_empty_workspace.toml'
-	os.write_file(test_file2, empty_workspace_content) or {
-		assert false, 'Failed to write empty workspace test file'
-	}
-	defer { os.rm(test_file2) or {} }
-
-	mut target2 := TestConfigTarget{}
-	glo55.load_config_into_from_file(mut target2, test_file2) or {
-		assert err.msg().contains('workspace name at index 1 cannot be empty')
-		return
-	}
-	assert false, 'Empty workspace name should fail validation'
 }
 
 // Test monitor configuration validation errors

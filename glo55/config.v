@@ -30,7 +30,6 @@ mut:
 	// Monitor and workspace configuration
 	monitor_configs     []MonitorConfig
 	keybindings         map[string]string
-	workspace_names     []string
 }
 
 // Load configuration directly into any ConfigTarget object
@@ -114,20 +113,6 @@ fn apply_toml_to_target(mut target ConfigTarget, doc toml.Doc, source_path strin
 	// Parse keybindings section
 	if keybindings_section := get_toml_table(doc, 'keybindings') {
 		target.keybindings = parse_keybindings(keybindings_section, source_path)!
-	}
-
-	// Parse workspace names
-	if workspace_names := get_toml_string_array(doc, 'workspace_names') {
-		if workspace_names.len > 10 {
-			return error('Invalid workspace_names in ${source_path}: maximum 10 workspaces allowed, got ${workspace_names.len}')
-		}
-		// Validate workspace names are not empty
-		for i, name in workspace_names {
-			if name.trim_space().len == 0 {
-				return error('Invalid workspace_names in ${source_path}: workspace name at index ${i} cannot be empty')
-			}
-		}
-		target.workspace_names = workspace_names
 	}
 
 	// Parse monitors section
@@ -297,16 +282,6 @@ pub fn validate_config_target(target ConfigTarget) ! {
 
 	if target.theme_name.len == 0 {
 		return error('Invalid theme_name: cannot be empty')
-	}
-
-	// Validate workspace names
-	if target.workspace_names.len > 10 {
-		return error('Invalid workspace_names: maximum 10 workspaces allowed, got ${target.workspace_names.len}')
-	}
-	for i, name in target.workspace_names {
-		if name.trim_space().len == 0 {
-			return error('Invalid workspace_names: workspace name at index ${i} cannot be empty')
-		}
 	}
 
 	// Validate keybindings

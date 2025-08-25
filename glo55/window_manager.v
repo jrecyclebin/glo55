@@ -21,7 +21,6 @@ mut:
 	theme_name          string            = 'default'
 	monitor_configs     []MonitorConfig
 	keybindings         map[string]string
-	workspace_names     []string          = ['1', '2', '3', '4', '5']
 	
 	// Window manager state
 	windows     []Window

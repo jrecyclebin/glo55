@@ -21,8 +21,8 @@ sed -e 's/^font    = "monospace"/font    = "Noto Sans Regular"/' \
 sed -e 's/^workspaces = \["main".*/workspaces = '"$WS"'/' -e 's#^theme = .*#theme = "theme.toml"#' \
     "$ROOT/test/config-default.toml" >"$TMP/config.toml"
 # ... and a BlueSteel variant with Unicode workspace names
-ln -s "$ROOT/themes" "$TMP"/
-sed -e 's/^workspaces = \["main".*/workspaces = '"$WS"'/' "$ROOT/test/config-bluesteel.toml" >"$TMP/config-bluesteel.toml"
+sed -e 's/^workspaces = \["main".*/workspaces = '"$WS"'/' -e "s#^theme = .*#theme = \"$ROOT/themes/bluesteel/theme.toml\"#" \
+    "$ROOT/test/config-bluesteel.toml" >"$TMP/config-bluesteel.toml"
 
 await_title() { for _ in $(seq 60); do [ -n "$(xdotool search --name "$1" 2>/dev/null | head -1)" ] && return; sleep 0.1; done; }
 roll_all() { for _ in 1 2 3 4 5 6; do key super+m; done; }

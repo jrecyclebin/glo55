@@ -8,7 +8,7 @@
 # (Use Mod1 if your host desktop grabs Super keys while testing in Xephyr.)
 mod = "Mod4"
 # Path to the theme, relative to this file.
-theme = "themes/geo55/theme.toml"
+theme = "../themes/geo55/theme.toml"
 # Time zone for the toolbar clock ($time). Without it the system zone (or $TZ) is used.
 timezone = "America/Denver"
 # Clock format (V time format): "HH:mm" 24h, "h:mm a" 12h, "HH:mm:ss" ...

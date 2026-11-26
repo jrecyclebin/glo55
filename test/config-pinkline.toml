@@ -1,0 +1,82 @@
+# Glo55 configuration — pinkline (white panels, hot-pink lines, an auto-hiding bottom bar).
+#
+# Run with:  ./glo55 -c test/config-pinkline.toml
+#
+
+[general]
+# What "Mod" means in the keybindings below: Mod4 = Super/Windows, Mod1 = Alt.
+# (Use Mod1 if your host desktop grabs Super keys while testing in Xephyr.)
+mod = "Mod4"
+# Path to the theme, relative to this file.
+theme = "../themes/pinkline/theme.toml"
+# Time zone for the toolbar clock ($time). Without it the system zone (or $TZ) is used.
+timezone = "America/Denver"
+# Clock format (V time format): "HH:mm" 24h, "h:mm a" 12h, "HH:mm:ss" ...
+time_format = "h:mm A"
+date_format = "DD MMM YYYY"
+
+[layout]
+# Width of the master pane as a fraction of the screen (0.1 .. 0.9).
+master_ratio = 0.55
+
+# One [[monitors]] entry per physical monitor, in Xinerama order.
+# Monitors without an entry get workspaces 1..5.
+[[monitors]]
+workspaces = ["main", "web", "code", "chat", "media"]
+
+[[monitors]]
+workspaces = ["terminal", "browser", "documents", "4", "5", "6", "7", "8", "9", "temp"]
+
+[keybindings]
+# Workspace switching (keys act on the monitor the mouse is on)
+"Mod+1" = "workspace 1"
+"Mod+2" = "workspace 2"
+"Mod+3" = "workspace 3"
+"Mod+4" = "workspace 4"
+"Mod+5" = "workspace 5"
+"Mod+6" = "workspace 6"
+"Mod+7" = "workspace 7"
+"Mod+8" = "workspace 8"
+"Mod+9" = "workspace 9"
+"Mod+0" = "workspace 10"
+
+# Move the focused window to a workspace
+"Mod+Shift+1" = "warp 1"
+"Mod+Shift+2" = "warp 2"
+"Mod+Shift+3" = "warp 3"
+"Mod+Shift+4" = "warp 4"
+"Mod+Shift+5" = "warp 5"
+"Mod+Shift+6" = "warp 6"
+"Mod+Shift+7" = "warp 7"
+"Mod+Shift+8" = "warp 8"
+"Mod+Shift+9" = "warp 9"
+"Mod+Shift+0" = "warp 10"
+
+# Window focus navigation (focus also follows the mouse)
+"Mod+j" = "focus down"
+"Mod+k" = "focus up"
+"Mod+h" = "focus left"
+"Mod+l" = "focus right"
+
+# Window movement within the layout (swaps places with the neighbour)
+"Mod+Shift+j" = "move down"
+"Mod+Shift+k" = "move up"
+"Mod+Shift+h" = "move left"
+"Mod+Shift+l" = "move right"
+
+# Launch terminal (falls back to xterm if kitty is not installed)
+"Mod+Shift+Enter" = "exec kitty"
+
+# Extras beyond the original spec
+"Mod+Shift+c" = "close"      # ask the focused window to close
+"Mod+m" = "collapse"         # minimise the focused window; the others fill the gap
+"Mod+Shift+m" = "restore"    # bring back the most recently collapsed window
+"Mod+Shift+q" = "quit"       # leave Glo55
+
+# Workspace cycling, reload/restart and fullscreen (these are also the built-in
+# defaults: delete a line to fall back to it, or bind the action to another key)
+"Mod+Tab" = "workspace next"        # next workspace on this monitor (wraps around)
+"Mod+Shift+Tab" = "workspace prev"  # previous one (wraps around)
+"Mod+r" = "reload"                  # re-read config.toml and the theme, keep every window
+"Mod+Shift+r" = "restart"           # re-exec glo55; the windows stay where they are
+"Mod+f" = "fullscreen"              # toggle fullscreen on the focused window (also the titlebar's rightmost button)

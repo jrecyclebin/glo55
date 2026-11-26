@@ -285,7 +285,8 @@ pub mut:
 }
 
 // new_monitor builds a monitor with one workspace per title. Toolbars flow
-// into top rows in theme order and their row heights are removed from work_area.
+// into rows in theme order (see place_toolbars) and their row heights are
+// removed from work_area.
 pub fn new_monitor(geometry ScreenRect, sections []ThemeSection, widths []u32, titles []string, layout &Layout) Monitor {
 	mut wss := []Workspace{}
 	for t in titles {
@@ -294,17 +295,18 @@ pub fn new_monitor(geometry ScreenRect, sections []ThemeSection, widths []u32, t
 			layout: unsafe { layout } // points into WindowManager.layouts, which outlives monitors
 		}
 	}
-	rects, reserved := layout_toolbars(geometry, sections, widths)
+	rects, work := place_toolbars(geometry, sections, widths)
 	mut toolbars := []Toolbar{cap: sections.len}
 	for i, rect in rects {
 		toolbars << Toolbar{
 			rect:        rect
 			theme_index: i
+			hidden:      sections[i].auto_hide
 		}
 	}
 	return Monitor{
 		geometry:   geometry
-		work_area:  work_area_below_toolbar(geometry, reserved)
+		work_area:  work
 		workspaces: wss
 		toolbars:   toolbars
 	}

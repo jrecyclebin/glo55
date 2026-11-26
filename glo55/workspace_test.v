@@ -637,3 +637,51 @@ fn test_fullscreen_window_is_floating_like_for_the_layout() {
 	rest := m.workspaces[0].windows.filter(it.info.id == a.id)[0]
 	assert rest.rect.width > 900
 }
+
+fn test_bottom_toolbars_stack_up_from_the_bottom_edge() {
+	sections := [
+		ThemeSection{
+			height: 24
+		},
+		ThemeSection{
+			height:   20
+			position: 'bottom'
+		},
+		ThemeSection{
+			height:   10
+			position: 'bottom'
+		},
+	]
+	rects, work := place_toolbars(mon_geo, sections, [u32(0), 0, 0])
+	assert rects[0] == ScreenRect{0, 0, 1000, 24}
+	assert rects[1] == ScreenRect{0, 780, 1000, 20}
+	assert rects[2] == ScreenRect{0, 770, 1000, 10}
+	assert work == ScreenRect{0, 24, 1000, 746}
+	m := new_monitor(ScreenRect{100, 50, 1000, 800}, sections, [u32(0), 0, 0], ['a'], mk_layout())
+	assert m.toolbars[1].rect == ScreenRect{100, 830, 1000, 20}
+	assert m.work_area == ScreenRect{100, 74, 1000, 746}
+}
+
+fn test_auto_hide_toolbars_only_reserve_their_hidden_strip() {
+	bottom := ThemeSection{
+		height:        26
+		position:      'bottom'
+		auto_hide:     true
+		hidden_height: 7
+	}
+	top := ThemeSection{
+		height:        30
+		auto_hide:     true
+		hidden_height: 4
+	}
+	rects, work := place_toolbars(mon_geo, [bottom, top], [u32(0), 0])
+	// the rect is the whole bar; only the strip at the edge is kept clear
+	assert rects[0] == ScreenRect{0, 774, 1000, 26}
+	assert rects[1] == ScreenRect{0, 0, 1000, 30}
+	assert work == ScreenRect{0, 4, 1000, 789}
+	assert toolbar_window_rect(rects[0], bottom, true) == ScreenRect{0, 793, 1000, 7}
+	assert toolbar_window_rect(rects[0], bottom, false) == rects[0]
+	assert toolbar_window_rect(rects[1], top, true) == ScreenRect{0, 0, 1000, 4}
+	m := new_monitor(mon_geo, [bottom], [u32(0)], ['a'], mk_layout())
+	assert m.toolbars[0].hidden
+}

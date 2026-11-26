@@ -20,13 +20,13 @@ build/prefix: FORCE
 
 # install: binary, the sample config (Blue Steel by name; a copy in
 # ~/.config/glo55 keeps working), the bundled themes (default, Blue Steel,
-# Fossils of the Machines, CORPO, Fresh Breath with its four palettes, and
-# geo55), X session entry. The other themes live on in themes/ for the
+# Fossils of the Machines, CORPO, Fresh Breath with its four palettes,
+# geo55 and pinkline), X session entry. The other themes live on in themes/ for the
 # installed config to point at by name; the per-theme sample configs the
 # functional tests use are in test/.
 FRESH = sedona painted-desert chillwave office-print
 install: build/glo55
-	install -d $(BINDIR) $(DATADIR)/themes/default $(DATADIR)/themes/bluesteel $(DATADIR)/themes/fossils $(DATADIR)/themes/corpo $(DATADIR)/themes/fresh-breath $(DATADIR)/themes/geo55 $(SESSIONDIR)
+	install -d $(BINDIR) $(DATADIR)/themes/default $(DATADIR)/themes/bluesteel $(DATADIR)/themes/fossils $(DATADIR)/themes/corpo $(DATADIR)/themes/fresh-breath $(DATADIR)/themes/geo55 $(DATADIR)/themes/pinkline $(SESSIONDIR)
 	install -m 755 build/glo55 $(BINDIR)/glo55
 	sed 's|^theme = .*|theme = "bluesteel/theme.toml"|' config.toml > $(DATADIR)/config.toml
 	chmod 644 $(DATADIR)/config.toml
@@ -36,6 +36,7 @@ install: build/glo55
 	cp -R themes/corpo/. $(DATADIR)/themes/corpo/
 	cp -R themes/fresh-breath/. $(DATADIR)/themes/fresh-breath/
 	cp -R themes/geo55/. $(DATADIR)/themes/geo55/
+	cp -R themes/pinkline/. $(DATADIR)/themes/pinkline/
 	find $(DATADIR) -type d -exec chmod 755 {} + && find $(DATADIR) -type f -exec chmod 644 {} +
 	sed 's|^Exec=.*|Exec=$(PREFIX)/bin/glo55|' dist/glo55.desktop > $(SESSIONDIR)/glo55.desktop
 	chmod 644 $(SESSIONDIR)/glo55.desktop
@@ -49,7 +50,7 @@ test:
 	$(V) test glo55 x11
 
 functional: build/glo55
-	test/functional.sh && test/floating.sh && test/multimonitor.sh && test/stress.sh && test/bluesteel.sh && test/fossils.sh && test/corpo.sh && test/fresh-breath.sh && test/geo55.sh && test/unicode.sh && test/workspace_buttons.sh && test/multiple_toolbars.sh && test/session.sh && test/install.sh
+	test/functional.sh && test/floating.sh && test/multimonitor.sh && test/stress.sh && test/bluesteel.sh && test/fossils.sh && test/corpo.sh && test/fresh-breath.sh && test/geo55.sh && test/pinkline.sh && test/unicode.sh && test/workspace_buttons.sh && test/multiple_toolbars.sh && test/session.sh && test/install.sh
 
 fmt:
 	$(V) fmt -w main.v x11 glo55

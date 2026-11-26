@@ -561,7 +561,7 @@ fn test_theme_parse_rejects_unknown_values() {
 // every theme bundled in the tree loads (this also exercises the parse-time
 // validation: any unknown key or value in a shipped theme fails or warns
 // here rather than at a user's desktop): default, bluesteel, corpo, fossils,
-// geo55 and the four fresh-breath palettes.
+// geo55, pinkline and the four fresh-breath palettes.
 fn test_bundled_themes_load() {
 	root := @VMODROOT
 	mut paths := []string{}
@@ -578,11 +578,42 @@ fn test_bundled_themes_load() {
 			}
 		}
 	}
-	assert paths.len == 9, 'the bundled set: default, bluesteel, corpo, fossils, geo55 + 4 palettes'
+	assert paths.len == 10, 'the bundled set: default, bluesteel, corpo, fossils, geo55, pinkline + 4 palettes'
 	for path in paths {
 		mut tt := TestTheme{}
 		load_theme_into(mut tt, path)!
 		assert tt.window_themes.len >= 1, path
 		assert tt.toolbar_themes.len >= 1, path
+	}
+}
+
+fn test_toolbar_position_and_auto_hide_settings() {
+	mut tt := TestTheme{}
+	parse_theme_into(mut tt, '[[windows]]
+[[toolbars]]
+position = "bottom"
+auto_hide = true
+hidden_height = 7
+reveal_ms = 800
+[toolbars.line]
+type = "solid"
+when = "hidden"
+') or {
+		panic(err)
+	}
+	sec := tt.toolbar_themes[0]
+	assert sec.position == 'bottom'
+	assert sec.auto_hide
+	assert sec.hidden_height == 7
+	assert sec.reveal_ms == 800
+	assert sec.elements[0].active_in(['hidden'])
+	assert !sec.elements[0].active_in(['focused'])
+	assert ThemeSection{}.position == 'top'
+	assert !ThemeSection{}.auto_hide
+	if _ := parse_theme_into(mut tt, '[[windows]]
+[[toolbars]]
+position = "left"
+') {
+		assert false, 'position = "left" should be refused'
 	}
 }

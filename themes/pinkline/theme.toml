@@ -1,0 +1,157 @@
+# pinkline - a minimalist white and hot-pink theme from J's "pixel perfect"
+# desktop screenshot. Only two things from it: the window panels (white, a
+# small pink tab top right, a pink line along the bottom over a black drop
+# edge) and the bottom toolbar, which hides away to the thin pink line along
+# the bottom of the screen. Point at it (or switch workspaces) and it slides
+# up with the workspaces and the clock. See README.md.
+
+background = "art/stone.png"
+font_files = ["fonts/pinkpixel.ttf"]
+
+[vars]
+desktop_color = "#5c5c5c"
+pink          = "#f70087"
+font          = "PinkPixel:antialias=false:hinting=false"
+# unfocused windows: grey accents; the focused one turns pink
+accent        = "#b4b4b4"
+label         = "#8c8c8c" # an empty workspace's name
+
+# ---------------------------------------------------------------- windows
+[[windows]]
+window_gap       = 10
+collapsed_height = 16
+
+[windows.focused]
+accent = "$pink"
+
+# 4px of white on the sides, 8 on top (room for the tab), and at the bottom
+# 3px of white, the 2px line and a 5px black drop edge.
+[windows.insets]
+left   = 4
+top    = 8
+right  = 4
+bottom = 10
+
+[windows.00_panel]
+type = "solid"
+fore = "#ffffff"
+bottom = { edge = "bottom", offset = -5 }
+
+[windows.01_tab]
+type = "solid"
+fore = "$accent"
+left   = { edge = "right", offset = -13 }
+top    = { edge = "top",   offset = 1 }
+bottom = { edge = "top",   offset = 6 }
+
+[windows.02_line]
+type = "solid"
+fore = "$accent"
+top    = { edge = "bottom", offset = -7 }
+bottom = { edge = "bottom", offset = -5 }
+
+[windows.03_notch]
+type = "image"
+path = "art/notch.png"
+left   = { edge = "left",   offset = 10 }
+top    = { edge = "bottom", offset = -7 }
+right  = { edge = "left",   offset = 15 }
+bottom = { edge = "bottom", offset = -5 }
+
+[windows.04_drop]
+type = "solid"
+fore = "#000000"
+top = { edge = "bottom", offset = -5 }
+
+# ---------------------------------------------------------------- toolbar
+# Along the bottom edge. Hidden it is 7px: the pink line over black. Shown it
+# is 26px of black with the line on top, the workspaces on the left and the
+# date and time on the right.
+[[toolbars]]
+position      = "bottom"
+height        = 26
+auto_hide     = true
+hidden_height = 7
+reveal_ms     = 1200
+
+[toolbars.00_black]
+type = "solid"
+fore = "#000000"
+
+[toolbars.01_line]
+type = "solid"
+fore = "$pink"
+bottom = { edge = "top", offset = 2 }
+
+[toolbars.02_notch]
+type = "image"
+path = "art/notch.png"
+left   = { edge = "left", offset = 10 }
+right  = { edge = "left", offset = 15 }
+bottom = { edge = "top",  offset = 2 }
+
+[toolbars.03_date]
+type = "text"
+content = "$date"
+transform = "upper"
+font = "$font"
+size = 8
+fore = "#ffffff"
+align = "right"
+unless = "hidden"
+left   = { edge = "right", offset = -260 }
+top    = { edge = "top",   offset = 10 }
+right  = { edge = "right", offset = -66 }
+bottom = { edge = "top",   offset = 22 }
+
+[toolbars.04_time]
+type = "text"
+content = "$time"
+transform = "upper"
+font = "$font"
+size = 8
+fore = "$pink"
+align = "right"
+unless = "hidden"
+left   = { edge = "right", offset = -62 }
+top    = { edge = "top",   offset = 10 }
+right  = { edge = "right", offset = -14 }
+bottom = { edge = "top",   offset = 22 }
+
+[toolbars.workspace_buttons]
+left   = { edge = "left",  offset = 24 }
+top    = { edge = "top",   offset = 7 }
+right  = { edge = "right", offset = -280 }
+bottom = { edge = "top",   offset = 23 }
+align = "left"
+spacing = 4
+padding = 8
+min_width = 24
+
+[toolbars.workspace_buttons.face_hover]
+type = "solid"
+fore = "#3a3a3a"
+when = "hover"
+unless = "active"
+
+[toolbars.workspace_buttons.face_active]
+type = "solid"
+fore = "$pink"
+when = "active"
+
+[toolbars.workspace_buttons.label]
+type = "text"
+content = "$workspace"
+transform = "upper"
+font = "$font"
+size = 8
+fore = "$label"
+align = "center"
+top    = { edge = "top",    offset = 3 }
+bottom = { edge = "bottom", offset = -2 }
+
+[toolbars.workspace_buttons.occupied]
+label = "#ffffff"
+
+[toolbars.workspace_buttons.active]
+label = "#ffffff"

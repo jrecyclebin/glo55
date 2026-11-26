@@ -27,6 +27,7 @@ the [design.md](docs/design.md) handy.
 - DWM-style master/stack tiling with `master_ratio`, gap and border width
 - Per-monitor workspaces (Xinerama multi-monitor), each monitor with its own workspace list
 - One or more themed toolbars per monitor (clickable workspace buttons, focused window title, clock), flowing across top rows
+  or bottom rows, optionally auto-hiding to a thin strip
 - Focus follows the mouse; the active monitor follows the pointer. Dialogs float above the tiled
   windows (focused or not), and closing a window gives focus back to the one that had it before
 - Keybindings from `config.toml`: `workspace N`, `warp N`, `focus/move up|down|left|right`,
@@ -59,7 +60,7 @@ Needs V (0.5.x) and the X11 dev packages:
 |---|---|
 | binary | `$PREFIX/bin/glo55` |
 | sample config (Blue Steel) | `$PREFIX/share/glo55/config.toml` |
-| bundled themes: `default`, `bluesteel`, `fossils`, `corpo`, `fresh-breath` (each: sedona, painted-desert, chillwave, office-print; art, fonts, licence), and `geo55` | `$PREFIX/share/glo55/themes/` |
+| bundled themes: `default`, `bluesteel`, `fossils`, `corpo`, `fresh-breath` (each: sedona, painted-desert, chillwave, office-print; art, fonts, licence), `geo55` and `pinkline` | `$PREFIX/share/glo55/themes/` |
 | X session entry for display managers | `$PREFIX/share/xsessions/glo55.desktop` |
 
 Then plain `glo55` works from any directory. To customise, copy the config and edit it:
@@ -142,7 +143,7 @@ xdotool-driven scripts in a real nested X server (Xephyr, or Xvfb with `HEADLESS
 second-WM detection), `test/floating.sh` (dialogs stay on top, focus returns on close, mouse
 movement focuses the window under it), `test/multimonitor.sh` (two Xinerama screens) and `test/stress.sh`
 (rapid open/close/switch), plus `test/unicode.sh` (titles in every encoding, fallback fonts) `test/bluesteel.sh` for the BlueSteel theme (insets, clickable
-`test/corpo.sh` for CORPO (insets, active/inactive frame, buttons, rolled bar, left workspaces / right clock, pixel-exact cover desktop), `test/fresh-breath.sh` for the four Fresh Breath palettes (shared layout, floating 19° plates, close / collapse / fullscreen in mockup order, rolled bar, clock + date, rail title, workspace plates, contact sheet), `test/geo55.sh` for geo55 (the Win95 desk band: floating silver bands, caption buttons, live CPU meter), and `test/workspace_buttons.sh` (toolbar workspace
+`test/corpo.sh` for CORPO (insets, active/inactive frame, buttons, rolled bar, left workspaces / right clock, pixel-exact cover desktop), `test/fresh-breath.sh` for the four Fresh Breath palettes (shared layout, floating 19° plates, close / collapse / fullscreen in mockup order, rolled bar, clock + date, rail title, workspace plates, contact sheet), `test/geo55.sh` for geo55 (the Win95 desk band: floating silver bands, caption buttons, live CPU meter), `test/pinkline.sh` for pinkline (white panels with pink tab and line, the auto-hiding bottom bar: hidden strip, shown on the pointer and briefly after a switch, clicks on the shown bar), and `test/workspace_buttons.sh` (toolbar workspace
 buttons: layout, hover/pressed, click to switch). They write screenshots to `screenshots/`.
 `test/multiple_toolbars.sh` covers corner-aligned bars sharing a row, right-bar clicks, and
 toolbar creation/removal on reload.
@@ -206,6 +207,25 @@ the original and added entries to the same monitor.
 Build and reload fix each row's height and every bar's vertical position. Later auto-width changes
 only resize around the bar's left, center, or right anchor; they never reflow earlier rows or move
 the tiling area. Consequently, growing bars can overlap—the theme author controls their widths.
+
+### Bottom and auto-hiding toolbars
+
+`position = "bottom"` puts a bar at the bottom of its monitor; bottom bars flow into rows up from
+the bottom edge, the same way top bars flow down. `auto_hide = true` tucks a bar away to a
+`hidden_height` strip at its edge, and only that strip is kept clear of windows. The bar slides out
+over the windows while the pointer is on the strip (or the bar), and for `reveal_ms` milliseconds
+after a workspace switch (0 = only on the pointer). While it is tucked away it is drawn in the
+`hidden` state: give elements `when = "hidden"` / `unless = "hidden"`, or override variables in a
+`[toolbars.hidden]` table. Workspace buttons are not drawn while hidden.
+
+```toml
+[[toolbars]]
+position      = "bottom"
+height        = 26
+auto_hide     = true
+hidden_height = 7      # default 4
+reveal_ms     = 1200   # default 1500
+```
 
 ### Workspace buttons
 
@@ -296,7 +316,7 @@ names: use the family (`Noto Sans`); "Noto Sans Regular" is also understood. Che
 `fc-match "Noto Sans"`; `GLO55_DEBUG=1` logs which font each text element really got. No shaping
 (Arabic joining, Indic scripts, RTL) yet; see NOTES.md item 33.
 
-`themes/bluesteel/README.md`, `themes/fossils/README.md`, `themes/corpo/README.md`, `themes/fresh-breath/README.md` and `themes/geo55/README.md` have their provenance and licences. The toolbar clock honours
+`themes/bluesteel/README.md`, `themes/fossils/README.md`, `themes/corpo/README.md`, `themes/fresh-breath/README.md`, `themes/geo55/README.md` and `themes/pinkline/README.md` have their provenance and licences. The toolbar clock honours
 `[general] timezone` / `time_format` / `date_format`. Theme loading is checked at parse time: a
 typo'd state name or `action`/`align`/`transform` value refuses the theme, and unknown keys are
 logged (`GLO55_DEBUG=1`) rather than silently ignored.

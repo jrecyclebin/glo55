@@ -1,8 +1,9 @@
 module glo55
 
 // toolbar.v - per-monitor toolbars. Bars flow left-to-right into rows at the
-// top of a monitor, wrapping only when the next bar does not fit. Row heights
-// are removed from the work area.
+// top of a monitor (or up from the bottom, `position = "bottom"`), wrapping
+// only when the next bar does not fit. Row heights are removed from the work
+// area; an auto-hide bar only takes its thin hidden strip.
 import x11
 
 pub const default_toolbar_height = u32(24)
@@ -18,6 +19,24 @@ pub mut:
 	buttons_desc string       // the same, as text (to log only layout changes)
 	hover        int = -1 // index of the button under the pointer, -1 = none
 	pressed      int = -1 // index of the button the left mouse button went down on, -1 = none
+	// auto-hide (see toolbar_window_rect): `rect` is always the shown bar
+	hidden         bool // tucked away to its hidden strip
+	pointer_inside bool // the pointer is on the bar (it stays out)
+	hide_at        i64  // unix ms when a bar shown by a workspace switch goes away, 0 = never
+}
+
+// toolbar_window_rect is where the bar's X window is: the whole bar, or
+// while it is hidden, the `hidden_height` strip at its monitor edge.
+pub fn toolbar_window_rect(rect ScreenRect, sec &ThemeSection, hidden bool) ScreenRect {
+	if !hidden || sec.hidden_height >= rect.height {
+		return rect
+	}
+	y := if sec.position == 'bottom' {
+		rect.y + int(rect.height - sec.hidden_height)
+	} else {
+		rect.y
+	}
+	return ScreenRect{rect.x, y, rect.width, sec.hidden_height}
 }
 
 // toolbar_bar_rect places
@@ -94,6 +113,58 @@ pub fn layout_toolbars(geometry ScreenRect, sections []ThemeSection, widths []u3
 	}
 	reserved += row_height
 	return rects, reserved
+}
+
+// place_toolbars lays out a monitor's bars: the top ones in rows down from
+// the top edge, the `position = "bottom"` ones in rows up from the bottom edge
+// (the first row lowest). An auto-hide bar takes only its hidden_height in its
+// row; its rect is still the whole bar, overlapping the work area towards the
+// middle of the monitor. Returns the rects (in section order) and the work area.
+pub fn place_toolbars(geometry ScreenRect, sections []ThemeSection, widths []u32) ([]ScreenRect, ScreenRect) {
+	mut rects := []ScreenRect{len: sections.len}
+	mut reserved := map[string]u32{}
+	for edge in ['top', 'bottom'] {
+		mut idx := []int{}
+		mut row_secs := []ThemeSection{}
+		mut row_widths := []u32{}
+		for i, sec in sections {
+			if sec.position == edge {
+				idx << i
+				mut s := sec
+				if sec.auto_hide && sec.hidden_height < sec.height {
+					s.height = sec.hidden_height
+				}
+				row_secs << s
+				row_widths << widths[i]
+			}
+		}
+		if idx.len == 0 {
+			continue
+		}
+		laid, total := layout_toolbars(geometry, row_secs, row_widths)
+		reserved[edge] = total
+		for j, i in idx {
+			mut r := laid[j]
+			full := if sections[i].height > geometry.height {
+				geometry.height
+			} else {
+				sections[i].height
+			}
+			if edge == 'bottom' {
+				r = ScreenRect{r.x, geometry.y + int(geometry.height) - (r.y - geometry.y) - int(full), r.width, full}
+			} else {
+				r = ScreenRect{r.x, r.y, r.width, full}
+			}
+			rects[i] = r
+		}
+	}
+	top := reserved['top'] or { u32(0) }
+	mut bottom := reserved['bottom'] or { u32(0) }
+	if top + bottom > geometry.height {
+		bottom = geometry.height - top
+	}
+	work := ScreenRect{geometry.x, geometry.y + int(top), geometry.width, geometry.height - top - bottom}
+	return rects, work
 }
 
 // toolbar_resize_rect changes width around the bar's existing horizontal

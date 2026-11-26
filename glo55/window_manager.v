@@ -177,7 +177,7 @@ fn (mut wm WindowManager) sync_toolbars(mon_id MonitorId) {
 	for sec in sections {
 		widths << wm.toolbar_wanted_width_for(sec, titles)
 	}
-	rects, reserved := layout_toolbars(mon.geometry, sections, widths)
+	rects, work := place_toolbars(mon.geometry, sections, widths)
 	for bar, tidx in indices {
 		if bar >= mon.toolbars.len {
 			mon.toolbars << Toolbar{}
@@ -190,11 +190,15 @@ fn (mut wm WindowManager) sync_toolbars(mon_id MonitorId) {
 		tb.buttons = []ScreenRect{}
 		tb.buttons_desc = ''
 		tb.last_drawn = ''
+		tb.hidden = sections[bar].auto_hide
+		tb.pointer_inside = false
+		tb.hide_at = 0
+		wr := toolbar_window_rect(tb.rect, sections[bar], tb.hidden)
 		if tb.win == 0 {
-			tb.win = wm.conn.create_bar(tb.rect.x, tb.rect.y, tb.rect.width, tb.rect.height)
+			tb.win = wm.conn.create_bar(wr.x, wr.y, wr.width, wr.height)
 			wm.conn.map_window(tb.win)
 		} else {
-			wm.conn.move_resize(tb.win, tb.rect.x, tb.rect.y, tb.rect.width, tb.rect.height)
+			wm.conn.move_resize(tb.win, wr.x, wr.y, wr.width, wr.height)
 		}
 		log.debug('${toolbar_label(mon_id, bar)} rect: ${tb.rect.x}:${tb.rect.y}:${tb.rect.width}:${tb.rect.height}')
 	}
@@ -204,7 +208,7 @@ fn (mut wm WindowManager) sync_toolbars(mon_id MonitorId) {
 	if mon.toolbars.len > indices.len {
 		mon.toolbars = mon.toolbars[..indices.len].clone()
 	}
-	mon.work_area = work_area_below_toolbar(mon.geometry, reserved)
+	mon.work_area = work
 }
 
 // toolbar_label names one bar of a monitor for log lines.
@@ -912,6 +916,7 @@ pub fn (mut wm WindowManager) switch_workspace_ex(mon_id MonitorId, idx int, war
 	if warp {
 		wm.warp_pointer_to_focus(mon_id)
 	}
+	wm.reveal_toolbars(mon_id)
 	wm.draw_toolbar(mon_id, true)
 }
 
@@ -1383,7 +1388,7 @@ fn (wm &WindowManager) toolbar_signature(mon_id MonitorId, bar_id int) string {
 	}
 	cpu := if wm.toolbar_uses_cpu(mon_id, bar_id) { '${wm.cpu_percent}' } else { '' }
 	tb := mon.toolbars[bar_id]
-	return '${mon_id == wm.active_monitor}|${mon.active}|${ws.join(',')}|${wm.focused_title(mon_id)}|${wm.clock()}|${wm.date()}|${cpu}|${tb.hover}|${tb.pressed}'
+	return '${mon_id == wm.active_monitor}|${mon.active}|${ws.join(',')}|${wm.focused_title(mon_id)}|${wm.clock()}|${wm.date()}|${cpu}|${tb.hover}|${tb.pressed}|${tb.hidden}'
 }
 
 // draw_toolbar paints every toolbar on a monitor.
@@ -1403,13 +1408,17 @@ fn (mut wm WindowManager) draw_one_toolbar(mon_id MonitorId, bar_id int, force b
 	log.debug('${toolbar_label(mon_id, bar_id)} repaint')
 	wm.place_toolbar(mon_id, bar_id)
 	tb := wm.monitors[mon_id].toolbars[bar_id]
-	if tb.rect.width == 0 || tb.rect.height == 0 {
+	sec := wm.toolbar_themes[tb.theme_index]
+	wr := toolbar_window_rect(tb.rect, sec, tb.hidden)
+	if wr.width == 0 || wr.height == 0 {
 		return
 	}
-	sec := wm.toolbar_themes[tb.theme_index]
 	mut states := []string{}
 	if mon_id == wm.active_monitor {
 		states << 'focused'
+	}
+	if tb.hidden {
+		states << 'hidden'
 	}
 	runtime := {
 		'title':      wm.focused_title(mon_id)
@@ -1420,17 +1429,19 @@ fn (mut wm WindowManager) draw_one_toolbar(mon_id MonitorId, bar_id int, force b
 		'cpu':        '${wm.cpu_percent}'
 	}
 	vars := sec.resolve_vars(wm.theme_vars, states, runtime)
-	buf := wm.draw.new_buffer(tb.rect.width, tb.rect.height)
-	bounds := ScreenRect{0, 0, tb.rect.width, tb.rect.height}
+	buf := wm.draw.new_buffer(wr.width, wr.height)
+	bounds := ScreenRect{0, 0, wr.width, wr.height}
 	for ele in sec.elements {
-		ele.render(mut wm.draw, buf, bounds, vars)
+		if ele.active_in(states) {
+			ele.render(mut wm.draw, buf, bounds, vars)
+		}
 	}
-	if sec.has_workspace_buttons {
+	if sec.has_workspace_buttons && !tb.hidden {
 		wm.draw_workspace_buttons(mon_id, bar_id, sec.workspace_buttons, buf, bounds, vars)
 	} else {
 		wm.monitors[mon_id].toolbars[bar_id].buttons = []ScreenRect{}
 	}
-	wm.draw.present(buf, tb.win, tb.rect.width, tb.rect.height)
+	wm.draw.present(buf, tb.win, wr.width, wr.height)
 	wm.draw.free_buffer(buf)
 	wm.conn.flush()
 }
@@ -1534,11 +1545,85 @@ fn (mut wm WindowManager) set_toolbar_hover(loc ToolbarLocation, i int) {
 	wm.monitors[loc.monitor].toolbars[loc.bar].hover = i
 }
 
-// on_toolbar_leave clears the hover state when the pointer leaves a toolbar.
-pub fn (mut wm WindowManager) on_toolbar_leave(w x11.Client) {
+// on_toolbar_leave clears the hover state when the pointer leaves a toolbar,
+// and (`hide`) tucks an auto-hide bar away again.
+pub fn (mut wm WindowManager) on_toolbar_leave(w x11.Client, hide bool) {
 	loc := wm.toolbar_monitor(w) or { return }
 	wm.set_toolbar_hover(loc, -1)
+	if hide && wm.toolbar_themes[wm.monitors[loc.monitor].toolbars[loc.bar].theme_index].auto_hide {
+		wm.monitors[loc.monitor].toolbars[loc.bar].pointer_inside = false
+		wm.set_toolbar_hidden(loc, true)
+	}
 	wm.draw_one_toolbar(loc.monitor, loc.bar, false)
+}
+
+// on_toolbar_enter slides an auto-hide bar out while the pointer is on it.
+fn (mut wm WindowManager) on_toolbar_enter(w x11.Client) {
+	loc := wm.toolbar_monitor(w) or { return }
+	if !wm.toolbar_themes[wm.monitors[loc.monitor].toolbars[loc.bar].theme_index].auto_hide {
+		return
+	}
+	wm.monitors[loc.monitor].toolbars[loc.bar].pointer_inside = true
+	wm.monitors[loc.monitor].toolbars[loc.bar].hide_at = 0
+	wm.set_toolbar_hidden(loc, false)
+}
+
+// set_toolbar_hidden tucks an auto-hide bar away to its hidden strip, or
+// shows the whole bar on top of the windows, and repaints it.
+fn (mut wm WindowManager) set_toolbar_hidden(loc ToolbarLocation, hidden bool) {
+	mut tb := &wm.monitors[loc.monitor].toolbars[loc.bar]
+	if tb.hidden == hidden {
+		return
+	}
+	tb.hidden = hidden
+	if hidden {
+		tb.hide_at = 0
+	}
+	wr := toolbar_window_rect(tb.rect, wm.toolbar_themes[tb.theme_index], hidden)
+	log.debug('${toolbar_label(loc.monitor, loc.bar)} ${if hidden { 'hidden' } else { 'shown' }}: ${wr.x}:${wr.y}:${wr.width}:${wr.height}')
+	wm.conn.move_resize(tb.win, wr.x, wr.y, wr.width, wr.height)
+	if !hidden {
+		wm.conn.raise_window(tb.win)
+	}
+	wm.draw_one_toolbar(loc.monitor, loc.bar, true)
+}
+
+// reveal_toolbars shows a monitor's auto-hide bars for their `reveal_ms`
+// after a workspace switch (a bar the pointer is on just stays out).
+fn (mut wm WindowManager) reveal_toolbars(mon_id MonitorId) {
+	for bar in 0 .. wm.monitors[mon_id].toolbars.len {
+		sec := wm.toolbar_themes[wm.monitors[mon_id].toolbars[bar].theme_index]
+		if !sec.auto_hide || sec.reveal_ms <= 0 {
+			continue
+		}
+		wm.set_toolbar_hidden(ToolbarLocation{mon_id, bar}, false)
+		if !wm.monitors[mon_id].toolbars[bar].pointer_inside {
+			wm.monitors[mon_id].toolbars[bar].hide_at = time.now().unix_milli() + sec.reveal_ms
+		}
+	}
+}
+
+// hide_due_toolbars tucks away the bars whose reveal time is up, and says how
+// many ms until the next one is due (at most `limit`), for the event loop.
+fn (mut wm WindowManager) hide_due_toolbars(limit int) int {
+	now := time.now().unix_milli()
+	mut wait := i64(limit)
+	for i in 0 .. wm.monitors.len {
+		for bar in 0 .. wm.monitors[i].toolbars.len {
+			tb := wm.monitors[i].toolbars[bar]
+			if tb.hide_at == 0 || tb.hidden {
+				continue
+			}
+			if tb.pointer_inside {
+				wm.monitors[i].toolbars[bar].hide_at = 0
+			} else if now >= tb.hide_at {
+				wm.set_toolbar_hidden(ToolbarLocation{MonitorId(i), bar}, true)
+			} else if tb.hide_at - now < wait {
+				wait = tb.hide_at - now
+			}
+		}
+	}
+	return int(wait)
 }
 
 // on_toolbar_press: the left button went down on a toolbar. A workspace button
@@ -1691,10 +1776,14 @@ fn (mut wm WindowManager) handle_event(ev x11.Event) {
 			wm.on_motion_notify(ev.x_root, ev.y_root)
 		}
 		x11.LeaveNotifyEvent {
-			wm.on_toolbar_leave(ev.window)
+			// a crossing caused by a grab does not tuck an auto-hide bar away
+			wm.on_toolbar_leave(ev.window, ev.mode == 0)
 			wm.on_frame_leave(ev.window)
 		}
 		x11.EnterNotifyEvent {
+			if ev.mode == 0 {
+				wm.on_toolbar_enter(ev.window)
+			}
 			wm.on_toolbar_pointer(ev.window, ev.x, ev.y)
 			wm.on_frame_pointer(ev.window, ev.x, ev.y)
 			// ignore crossings caused by grabs and moves between a window's own children
@@ -1750,10 +1839,11 @@ fn (mut wm WindowManager) handle_expose(w x11.Client) {
 pub fn (mut wm WindowManager) run() {
 	log.info('entering event loop')
 	for wm.running {
-		wm.conn.wait_for_events(1000)
+		wm.conn.wait_for_events(wm.hide_due_toolbars(1000))
 		for wm.conn.pending() > 0 && wm.running {
 			wm.handle_event(wm.conn.next_event())
 		}
+		wm.hide_due_toolbars(1000)
 		wm.sample_cpu()
 		wm.draw_all_toolbars(false)
 		wm.conn.flush()
@@ -1909,7 +1999,8 @@ fn (mut wm WindowManager) place_toolbar(mon_id MonitorId, bar_id int) {
 	wm.monitors[mon_id].toolbars[bar_id].rect = new_rect
 	log.debug('${toolbar_label(mon_id, bar_id)} rect: ${new_rect.x}:${new_rect.y}:${new_rect.width}:${new_rect.height}')
 	if tb.win != 0 {
-		wm.conn.move_resize(tb.win, new_rect.x, new_rect.y, new_rect.width, new_rect.height)
+		wr := toolbar_window_rect(new_rect, sec, tb.hidden)
+		wm.conn.move_resize(tb.win, wr.x, wr.y, wr.width, wr.height)
 	}
 }
 

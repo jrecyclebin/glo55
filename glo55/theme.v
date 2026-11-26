@@ -12,7 +12,8 @@ import os
 import toml
 
 // The reserved state names. Everything else that is a table is an element.
-pub const state_names = ['focused', 'hover', 'clicked', 'pressed', 'collapsed']
+// `hidden` is an auto-hide toolbar while it is tucked away.
+pub const state_names = ['focused', 'hover', 'clicked', 'pressed', 'collapsed', 'hidden']
 
 // theme_root_keys are the top-level keys a theme file may hold.
 const theme_root_keys = ['extends', 'vars', 'font_files', 'background', 'background_scale',
@@ -21,7 +22,7 @@ const theme_root_keys = ['extends', 'vars', 'font_files', 'background', 'backgro
 // section_keys are the scalar settings a [[windows]] / [[toolbars]] entry may
 // hold; anything else is reported.
 const section_keys = ['border_width', 'window_gap', 'shaped', 'collapsed_height', 'height', 'width',
-	'align', 'auto_width', 'monitor']
+	'align', 'auto_width', 'monitor', 'position', 'auto_hide', 'hidden_height', 'reveal_ms']
 
 // side reads one side of an [insets] table (missing sides are 0).
 fn side(v map[string]toml.Any, k string) u32 {
@@ -122,9 +123,17 @@ pub mut:
 	width            u32 // toolbars only: 0 = the monitor's width; with auto_width, a minimum
 	align            string = 'left' // toolbars only: left | center | right, used when the bar is narrower than the monitor
 	auto_width       bool // toolbars only: shrink the bar to its contents (and grow with workspaces)
-	monitor          int = -1 // optional explicit monitor index
-	elements         []Element
-	states           map[string]map[string]string // state name -> variable overrides
+	monitor          int    = -1  // optional explicit monitor index
+	position         string = 'top' // toolbars only: top | bottom edge of the monitor
+	// toolbars only: auto-hide. The bar shrinks to a `hidden_height` strip at its
+	// edge (drawn with the `hidden` state) and only that strip is kept clear of
+	// windows. It slides out over the windows while the pointer is on it, and for
+	// `reveal_ms` after a workspace switch (0 = not on a switch).
+	auto_hide     bool
+	hidden_height u32 = 4
+	reveal_ms     int = 1500
+	elements      []Element
+	states        map[string]map[string]string // state name -> variable overrides
 	// toolbars only: the workspace button region and template (see workspace_buttons.v)
 	workspace_buttons     WorkspaceButtons
 	has_workspace_buttons bool
@@ -344,6 +353,22 @@ fn parse_section(a toml.Any) !ThemeSection {
 					'monitor' {
 						sec.monitor = v.int()
 					}
+					'position' {
+						pos := v.string()
+						if pos !in ['top', 'bottom'] {
+							return error('toolbar position must be top or bottom (got "${pos}")')
+						}
+						sec.position = pos
+					}
+					'auto_hide' {
+						sec.auto_hide = v.bool()
+					}
+					'hidden_height' {
+						sec.hidden_height = u32(v.int())
+					}
+					'reveal_ms' {
+						sec.reveal_ms = v.int()
+					}
 					else {
 						log.warn('unknown section setting "${k}" ignored')
 					}
@@ -424,7 +449,7 @@ pub fn substitute(s string, vars map[string]string) string {
 
 // resolve_vars builds the effective variable set for a section: global
 // `[vars]`, then the overrides of each active state (in the fixed priority
-// order focused < hover < clicked < pressed < collapsed), then run-time variables
+// order focused < hover < clicked < pressed < collapsed < hidden), then run-time variables
 // (`$title`, `$workspace`, `$time`) which always win.
 pub fn (sec &ThemeSection) resolve_vars(globals map[string]string, active_states []string, runtime map[string]string) map[string]string {
 	mut out := globals.clone()

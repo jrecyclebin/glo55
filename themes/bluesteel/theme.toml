@@ -1,0 +1,378 @@
+# BlueSteel for Glo55 - the Enlightenment E16 "BlueSteel" theme (DR16 era)
+# by Daniel Erat ("hunchback"), MIT-style licence: see COPYING / README.md.
+#
+# Window frame: translated mechanically from the theme's own
+# borders/DEFAULT/border.cfg by tools/e16_border_to_toml.py (part positions,
+# stretch/fixed sizes, close/iconify actions), using the original PNGs
+# unmodified. Toolbar and desktop: hand-assembled from the same theme's other
+# art (dialogs/, backgrounds/), since E16 has no toolbar of this kind.
+#
+# E16 "bg" images are the unfocused look, "fg" the focused one: $sfx switches.
+
+background = "backgrounds/images/All-Good-People-4.jpg"
+font_files = ["ttfonts/vixar.ttf"]
+
+[vars]
+desktop_color = "#212433"
+sfx           = "bg"
+font          = "Vixar ASCI"
+title_color   = "#c0c0c0"
+text_color    = "#ffffff"
+dim_color     = "#c0c0c0"
+label_color   = "#c0c0c0"     # workspace button labels (overridden per button state)
+
+# ---------------------------------------------------------------- windows
+
+[[windows]]
+window_gap = 6
+# E16 borders are shaped: the frame window is cut to what its parts paint
+shaped     = true
+
+# E16 DEFAULT border: 10 left/right/bottom, 20 for the title bar. A rolled-up
+# (collapsed) window is just that 20px title bar (E16's "shaded" look; the
+# elements marked when/unless "collapsed" below pick the shaded parts).
+[windows.insets]
+left   = 10
+top    = 20
+right  = 10
+bottom = 10
+
+[windows.focused]
+sfx         = "fg"
+title_color = "#ffffff"
+
+
+[windows.00_close_shaded]
+type = "image"
+path = "borders/common/images/close_sh_$sfx.png"
+scale = "none"
+left = { edge = "left", ratio = 0.0, offset = 0 }
+top = { edge = "top", ratio = 0.0, offset = 0 }
+right = { edge = "left", ratio = 0.0, offset = 16 }
+bottom = { edge = "top", ratio = 0.0, offset = 20 }
+action = "close"
+when = "collapsed"
+
+[windows.01_close]
+type = "image"
+path = "borders/common/images/close_$sfx.png"
+scale = "none"
+left = { edge = "left", ratio = 0.0, offset = 0 }
+top = { edge = "top", ratio = 0.0, offset = 0 }
+right = { edge = "left", ratio = 0.0, offset = 16 }
+bottom = { edge = "top", ratio = 0.0, offset = 20 }
+action = "close"
+unless = "collapsed"
+
+[windows.02_titlebar]
+type = "image"
+path = "borders/common/images/default_title_$sfx.png"
+scale = "stretch"
+left = { edge = "left", ratio = 0.0, offset = 16 }
+top = { edge = "top", ratio = 0.0, offset = 0 }
+right = { edge = "left", ratio = 0.5, offset = 1 }
+bottom = { edge = "top", ratio = 0.0, offset = 20 }
+
+[windows.02_titlebar_text]
+type = "text"
+content = "$title"
+font = "$font"
+size = 12
+fore = "$title_color"
+shadow = "#000000"
+align = "center"
+left = { edge = "left", ratio = 0.0, offset = 20 }
+top = { edge = "top", ratio = 0.0, offset = 0 }
+right = { edge = "left", ratio = 0.5, offset = -1 }
+bottom = { edge = "top", ratio = 0.0, offset = 18 }
+
+[windows.03_top_right_trim]
+type = "image"
+path = "borders/common/images/toprighttrim_$sfx.png"
+scale = "none"
+left = { edge = "left", ratio = 0.5, offset = 1 }
+top = { edge = "top", ratio = 0.0, offset = 0 }
+right = { edge = "left", ratio = 0.5, offset = 86 }
+bottom = { edge = "top", ratio = 0.0, offset = 20 }
+
+[windows.04_top]
+type = "image"
+path = "borders/common/images/default_top_$sfx.png"
+scale = "stretch"
+left = { edge = "left", ratio = 0.5, offset = 86 }
+top = { edge = "top", ratio = 0.0, offset = 4 }
+right = { edge = "left", ratio = 1.0, offset = -18 }
+bottom = { edge = "top", ratio = 0.0, offset = 20 }
+
+[windows.05_minimize]
+type = "image"
+path = "borders/common/images/minimize_$sfx.png"
+scale = "none"
+left = { edge = "left", ratio = 1.0, offset = -42 }
+top = { edge = "top", ratio = 0.0, offset = 4 }
+right = { edge = "left", ratio = 1.0, offset = -30 }
+bottom = { edge = "top", ratio = 0.0, offset = 20 }
+action = "collapse"
+
+[windows.06_maximize]
+type = "image"
+path = "borders/DEFAULT/images/maximize_$sfx.png"
+scale = "none"
+left = { edge = "left", ratio = 1.0, offset = -30 }
+top = { edge = "top", ratio = 0.0, offset = 4 }
+right = { edge = "left", ratio = 1.0, offset = -18 }
+bottom = { edge = "top", ratio = 0.0, offset = 20 }
+action = "fullscreen"
+
+[windows.07_stick_shaded]
+type = "image"
+path = "borders/common/images/stick_sh_$sfx.png"
+scale = "none"
+left = { edge = "left", ratio = 1.0, offset = -18 }
+top = { edge = "top", ratio = 0.0, offset = 4 }
+right = { edge = "left", ratio = 1.0, offset = -4 }
+bottom = { edge = "top", ratio = 0.0, offset = 20 }
+when = "collapsed"
+
+[windows.08_stick]
+type = "image"
+path = "borders/common/images/stick_$sfx.png"
+scale = "none"
+left = { edge = "left", ratio = 1.0, offset = -18 }
+top = { edge = "top", ratio = 0.0, offset = 4 }
+right = { edge = "left", ratio = 1.0, offset = -4 }
+bottom = { edge = "top", ratio = 0.0, offset = 20 }
+unless = "collapsed"
+
+[windows.09_left_trim]
+type = "image"
+path = "borders/common/images/lefttrim_$sfx.png"
+scale = "none"
+left = { edge = "left", ratio = 0.0, offset = 0 }
+top = { edge = "top", ratio = 0.0, offset = 20 }
+right = { edge = "left", ratio = 0.0, offset = 10 }
+bottom = { edge = "top", ratio = 0.0, offset = 55 }
+unless = "collapsed"
+
+[windows.10_left]
+type = "image"
+path = "borders/common/images/left_$sfx.png"
+scale = "stretch"
+left = { edge = "left", ratio = 0.0, offset = 4 }
+top = { edge = "top", ratio = 0.0, offset = 55 }
+right = { edge = "left", ratio = 0.0, offset = 10 }
+bottom = { edge = "top", ratio = 1.0, offset = -15 }
+unless = "collapsed"
+
+[windows.11_left_resize]
+type = "image"
+path = "borders/common/images/leftresize_$sfx.png"
+scale = "none"
+left = { edge = "left", ratio = 0.0, offset = 4 }
+top = { edge = "top", ratio = 1.0, offset = -15 }
+right = { edge = "left", ratio = 0.0, offset = 10 }
+bottom = { edge = "top", ratio = 1.0, offset = -10 }
+unless = "collapsed"
+
+[windows.12_right]
+type = "image"
+path = "borders/common/images/right_$sfx.png"
+scale = "stretch"
+left = { edge = "left", ratio = 1.0, offset = -10 }
+top = { edge = "top", ratio = 0.0, offset = 20 }
+right = { edge = "left", ratio = 1.0, offset = -4 }
+bottom = { edge = "top", ratio = 1.0, offset = -45 }
+unless = "collapsed"
+
+[windows.13_right_trim]
+type = "image"
+path = "borders/common/images/righttrim_$sfx.png"
+scale = "none"
+left = { edge = "left", ratio = 1.0, offset = -10 }
+top = { edge = "top", ratio = 1.0, offset = -45 }
+right = { edge = "left", ratio = 1.0, offset = 0 }
+bottom = { edge = "top", ratio = 1.0, offset = -10 }
+unless = "collapsed"
+
+[windows.14_bottom_resize]
+type = "image"
+path = "borders/common/images/bottomresize_$sfx.png"
+scale = "none"
+left = { edge = "left", ratio = 0.0, offset = 4 }
+top = { edge = "top", ratio = 1.0, offset = -10 }
+right = { edge = "left", ratio = 0.0, offset = 15 }
+bottom = { edge = "top", ratio = 1.0, offset = -4 }
+unless = "collapsed"
+
+[windows.15_bottom]
+type = "image"
+path = "borders/common/images/default_bottom_$sfx.png"
+scale = "stretch"
+left = { edge = "left", ratio = 0.0, offset = 15 }
+top = { edge = "top", ratio = 1.0, offset = -10 }
+right = { edge = "left", ratio = 1.0, offset = -45 }
+bottom = { edge = "top", ratio = 1.0, offset = -4 }
+unless = "collapsed"
+
+[windows.16_bottom_trim]
+type = "image"
+path = "borders/common/images/default_bottomtrim_$sfx.png"
+scale = "none"
+left = { edge = "left", ratio = 1.0, offset = -45 }
+top = { edge = "top", ratio = 1.0, offset = -10 }
+right = { edge = "left", ratio = 1.0, offset = 0 }
+bottom = { edge = "top", ratio = 1.0, offset = 0 }
+unless = "collapsed"
+
+# --------------------------------------------------------------- toolbars
+
+# The top bar is E16's own title bar, as it sits when a window is parked at the
+# top of the screen: the tab at the left (here showing the clock, where E16
+# shows "enlightenment"), the slanted trim tabs, and the long brushed strip.
+# Every piece is the real border art, drawn exactly as in [[windows]] and
+# the same size (20px). The workspaces are
+# buttons on the strip's right, embedded in it, drawn from the dialog button
+# art (dialogs/images) turned over so the bevel is inset; glo55/ holds those
+# derived faces (tools/bluesteel_button_art.sh makes them).
+
+[[toolbars]]
+height = 20
+
+[toolbars.focused]          # the toolbar of the monitor the mouse is on
+sfx         = "fg"
+title_color = "#ffffff"
+
+[toolbars.00_strip]
+type  = "image"
+path  = "borders/common/images/default_top_$sfx.png"
+scale = "stretch"
+top    = { edge = "top", offset = 0 }
+bottom = { edge = "bottom", offset = 0 }
+
+[toolbars.01_clock_tab]
+type  = "image"
+path  = "borders/common/images/default_title_$sfx.png"
+scale = "stretch"
+right  = { edge = "left", offset = 220 }
+
+[toolbars.02_clock]
+type    = "text"
+content = "glo55 // $time"
+font    = "$font"
+size    = 12
+fore    = "$title_color"
+shadow  = "#000000"
+align   = "left"
+left   = { edge = "left", offset = 8 }
+right   = { edge = "left", offset = 212 }
+bottom = { edge = "top", ratio = 0.0, offset = 18 }
+
+[toolbars.03_trim]
+type  = "image"
+path  = "borders/common/images/toprighttrim_$sfx.png"
+scale = "none"
+left   = { edge = "left", offset = 220 }
+right  = { edge = "left", offset = 305 }
+
+# One button per workspace of the monitor, packed against the right edge. The
+# buttons are flush with the strip (the full bar height, no drop shadow) and
+# look embedded: wells pressed into the steel, dark on the top-left and light on
+# the bottom-right.
+[toolbars.workspace_buttons]
+left          = { edge = "left", offset = 156 }
+right         = { edge = "right", offset = -4 }
+top           = { edge = "top", offset = 0 }
+bottom        = { edge = "bottom", offset = 0 }
+align         = "right"
+spacing       = 2
+padding       = 7
+
+# label colours: empty workspaces dim, occupied ones brighter, the current one
+# and the hovered one white
+[toolbars.workspace_buttons.normal]
+label_color = "#a9acbc"
+[toolbars.workspace_buttons.occupied]
+label_color = "#e4e6f0"
+[toolbars.workspace_buttons.active]
+label_color = "#ffffff"
+[toolbars.workspace_buttons.hover]
+label_color = "#ffffff"
+[toolbars.workspace_buttons.pressed]
+label_color = "#ffffff"
+
+# idle: a shallow well (button_up's face, turned over so the bevel is inset)
+[toolbars.workspace_buttons.00_well]
+type  = "image"
+path  = "glo55/well_up.png"
+scale = "slice"
+slice = [3, 3, 3, 3]
+when  = "normal"
+
+[toolbars.workspace_buttons.01_well_hover]
+type  = "image"
+path  = "glo55/well_up_hover.png"
+scale = "slice"
+slice = [3, 3, 3, 3]
+when   = "hover"
+unless = "active"
+
+# pressed: the darker face (button_down's)
+[toolbars.workspace_buttons.02_well_pressed]
+type  = "image"
+path  = "glo55/well_down.png"
+scale = "slice"
+slice = [3, 3, 3, 3]
+when   = "pressed"
+unless = "active"
+
+# the current workspace: the deepest well, E16's dark inset panel
+# (dialogs/images/darkbg.png), outlined with the pager's own "selected
+# desktop" frame (pager/images/selected.png)
+[toolbars.workspace_buttons.03_deep]
+type  = "image"
+path  = "dialogs/images/darkbg.png"
+scale = "slice"
+slice = [3, 3, 3, 3]
+when   = "active"
+unless = "hover"
+
+[toolbars.workspace_buttons.04_deep_hover]
+type  = "image"
+path  = "glo55/well_dark_hover.png"
+scale = "slice"
+slice = [3, 3, 3, 3]
+when  = "active,hover"
+
+[toolbars.workspace_buttons.05_outline]
+type  = "image"
+path  = "pager/images/selected.png"
+scale = "slice"
+slice = [3, 3, 3, 3]
+when  = "active"
+
+# the inset's shadow edge: a dark line along the top and left of every well
+# (the dark of the theme's own button shadows)
+[toolbars.workspace_buttons.06_inset_top]
+type   = "solid"
+fore   = "#202026"
+bottom = { edge = "top", offset = 1 }
+unless = "active"
+
+[toolbars.workspace_buttons.07_inset_left]
+type   = "solid"
+fore   = "#202026"
+right  = { edge = "left", offset = 1 }
+unless = "active"
+
+[toolbars.workspace_buttons.08_label]
+type    = "text"
+content = "$workspace"
+font    = "$font"
+size    = 12
+fore    = "$label_color"
+shadow  = "#000000"
+align   = "center"
+left    = { edge = "left", offset = 2 }
+right   = { edge = "right", offset = -2 }
+top     = { edge = "top", offset = 1 }
+bottom  = { edge = "bottom", offset = 0 }

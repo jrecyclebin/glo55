@@ -5,8 +5,9 @@
 # V modules cache
 .vmodules/
 
-# Build artifacts
+# Build and test artifacts
 dist/
+screenshots/
 *.o
 *.a
 *.so

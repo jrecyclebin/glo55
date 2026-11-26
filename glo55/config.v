@@ -1,300 +1,380 @@
 module glo55
 
+// config.v - config.toml loading: monitors/workspaces, keybindings, a few
+// layout settings. `load_config_into` fills any object implementing
+// ConfigTarget (the WindowManager does).
 import os
 import toml
-import log
 
-pub const min_border_width = 0
-pub const max_border_width = 50
-pub const min_gap_size = 0
-pub const max_gap_size = 100
+fn C.tzset()
 
-// MonitorConfig defines per-monitor configuration
+// MonitorConfig is one `[[monitors]]` entry.
 pub struct MonitorConfig {
 pub:
 	workspaces []string
 }
 
-// Configuration file search paths in order of precedence
-const config_search_paths = [
-	'./glo55.toml', // Current directory
-	'~/.config/glo55/config.toml', // User config
-	'/etc/glo55/config.toml', // System config
-]
+pub enum ActionKind {
+	workspace      // workspace N: show workspace N on the active monitor
+	warp           // warp N: move the focused window to workspace N
+	focus          // focus up|down|left|right
+	move           // move up|down|left|right
+	exec           // exec CMD: run a command
+	close          // close: ask the focused window to close
+	collapse       // collapse: minimise the focused window (others fill its space)
+	restore        // restore: bring back the most recently collapsed window
+	quit           // quit: leave the window manager
+	workspace_next // workspace next: the next workspace of the active monitor (wraps)
+	workspace_prev // workspace prev: the previous one (wraps)
+	reload         // reload: re-read config.toml and theme.toml in place
+	restart        // restart: re-exec the window manager; the windows stay
+	fullscreen     // fullscreen: toggle the focused window over its whole monitor
+}
 
-// ConfigTarget interface defines objects that can receive configuration
-// Uses V's structural interfaces - any object with these properties implements ConfigTarget
+// Action is a parsed keybinding action.
+pub struct Action {
+pub:
+	kind ActionKind
+	n    int       // 0-based workspace index for workspace/warp
+	dir  Direction // for focus/move
+	cmd  string    // for exec
+}
+
+// KeyBinding is a parsed `"Mod+Shift+1" = "warp 1"` line.
+pub struct KeyBinding {
+pub:
+	mods   u32    // X modifier mask (Mod already resolved)
+	key    string // keysym name, e.g. "Return", "j", "1"
+	action Action
+	source string // the original "Mod+..." text, for logging
+}
+
+// ConfigTarget is implemented by whatever wants to receive configuration.
 pub interface ConfigTarget {
 mut:
-	// Window manager settings
-	border_width        int
-	gap_size            int
-	focus_follows_mouse bool
-	theme_name          string
-	
-	// Monitor and workspace configuration
-	monitor_configs     []MonitorConfig
-	keybindings         map[string]string
+	mod_mask        u32 // what "Mod" means in keybindings
+	monitor_configs []MonitorConfig
+	keybindings     []KeyBinding
+	master_ratio    f32
+	theme_path      string // path of theme.toml (relative paths are relative to config.toml)
+	timezone        string // IANA zone for the toolbar clock ('' = system/TZ)
+	time_format     string // clock format for $time ('' = "HH:mm")
+	date_format     string // calendar format for $date ('' = "ddd DD MMM")
 }
 
-// Load configuration directly into any ConfigTarget object
-pub fn load_config_into(mut target ConfigTarget) ! {
-	// Try to find and load config file
-	config_path := find_config_file()!
-	load_config_into_from_file(mut target, config_path)!
-}
-
-// Load configuration from specific file path directly into ConfigTarget object
-pub fn load_config_into_from_file(mut target ConfigTarget, path string) ! {
-	// Parse TOML content
-	parsed_toml := toml.parse_file(path)!
-
-	// Apply TOML values directly to the target object
-	load_config_root(mut target, parsed_toml, path)
-	
-	log.info('Configuration loaded successfully from ${path}')
-}
-
-// Find the first available configuration file
-fn find_config_file() !string {
-	for path in config_search_paths {
-		expanded_path := os.expand_tilde_to_home(path)
-		if os.exists(expanded_path) {
-			log.info('Found config file: ${expanded_path}')
-			return expanded_path
-		}
-	}
-
-	// If no config file found, return error
-	searched_paths := config_search_paths.join(', ')
-	return error('No configuration file found. Searched: ${searched_paths}')
-}
-
-// Apply parsed TOML values directly to ConfigTarget object with validation
-fn load_config_root(mut target ConfigTarget, doc toml.Doc, source_path string) {
-	root := doc.to_any()
-
-	// Parse window manager settings
-	if bw := get_toml_int(root, 'border_width', min_border_width, max_border_width) {
-		target.border_width = bw
-	}
-
-	if gap_size := get_toml_int(root, 'gap_size', min_gap_size, max_gap_size) {
-		target.gap_size = gap_size
-	}
-
-	if focus_follows_mouse := get_toml_bool(root, 'focus_follows_mouse') {
-		target.focus_follows_mouse = focus_follows_mouse
-	}
-
-	if theme_name := get_toml_string(root, 'theme_name') {
-		target.theme_name = theme_name
-	}
-
-	// Parse keybindings section
-	if keybindings_section := get_toml_table(root, 'keybindings') {
-		target.keybindings = parse_keybindings(keybindings_section, source_path)
-	}
-
-	// Parse monitors section
-	if monitors_section := get_toml_table(root, 'monitors') {
-		target.monitor_configs = parse_monitors(monitors_section, source_path)
-	}
-}
-
-// Utility functions for safely accessing TOML values
-
-// Get integer value from TOML document
-fn get_toml_int(doc toml.Any, key string, min int, max int) ?int {
-	val := doc.value_opt(key) or { return none }
-	num := val.int()
-	if num < min {
-		log.warn('config.toml ${key} must be at least ${min} but is ${num}')
-		return min
-	}
-	if num > max {
-		log.warn('config.toml ${key} must be no more than ${max} but is ${num}')
-		return max
-	}
-	return num
-}
-
-// Get boolean value from TOML document
-fn get_toml_bool(doc toml.Any, key string) ?bool {
-	val := doc.value_opt(key) or { return none }
-	return val.bool()
-}
-
-// Get string value from TOML document
-fn get_toml_string(doc toml.Any, key string) ?string {
-	val := doc.value_opt(key) or { return none }
-	return val.string()
-}
-
-// Get string array value from TOML document
-fn get_toml_string_array(doc toml.Any, key string) ?[]string {
-	val := doc.value_opt(key) or { return none }
-	return val.array().map(it.string())
-}
-
-// Get table from TOML document
-fn get_toml_table(doc toml.Any, key string) ?toml.Any {
-	val := doc.value_opt(key) or { return none }
-	return val
-}
-
-// Parse keybindings from TOML section
-fn parse_keybindings(keybindings_val toml.Any, source_path string) map[string]string {
-	mut keybindings := map[string]string{}
-	
-	// Get the keybindings as a map
-	bindings_map := keybindings_val.as_map()
-	for key, value in bindings_map {
-		// Validate key combination format
-		validate_keybinding(key, source_path) or { continue }
-		
-		// Get command string
-		command := value.string()
-		if command.trim_space().len == 0 {
-			log.warn('Invalid keybinding in ${source_path}: command for key "${key}" cannot be empty')
-		} else {
-			keybindings[key] = command
-		}
-	}
-	
-	return keybindings
-}
-
-// Validate keybinding format
-fn validate_keybinding(key string, source_path string) ! {
-	if key.trim_space().len == 0 {
-		return error('Invalid keybinding in ${source_path}: key combination cannot be empty')
-	}
-	
-	// Split by + to get modifiers and key
-	parts := key.split('+')
-	if parts.len == 0 {
-		return error('Invalid keybinding "${key}" in ${source_path}: invalid format')
-	}
-	
-	// Check for valid modifier keys
-	valid_modifiers := ['Mod', 'Shift', 'Control', 'Alt']
-	mut has_key := false
-	
-	for i, part in parts {
-		trimmed_part := part.trim_space()
-		if i == parts.len - 1 {
-			// Last part should be the actual key
-			if trimmed_part.len == 0 {
-				return error('Invalid keybinding "${key}" in ${source_path}: missing actual key')
-			}
-			has_key = true
-		} else {
-			// All other parts should be valid modifiers
-			if trimmed_part !in valid_modifiers {
-				return error('Invalid keybinding "${key}" in ${source_path}: unknown modifier "${trimmed_part}". Valid modifiers: ${valid_modifiers.join(', ')}')
-			}
-		}
-	}
-	
-	if !has_key {
-		return error('Invalid keybinding "${key}" in ${source_path}: no actual key specified')
-	}
-}
-
-// Parse monitors configuration from TOML section
-fn parse_monitors(monitors_val toml.Any, source_path string) []MonitorConfig {
-	mut monitors := []MonitorConfig{}
-	
-	// Try to get monitors as an array
-	monitors_array := monitors_val.array()
-	if monitors_array.len > 0 {
-		// Array of monitor configurations
-		for i, monitor_val in monitors_array {
-			monitor_config := parse_single_monitor(monitor_val, i, source_path) or { continue }
-			monitors << monitor_config
-		}
+// apply_timezone points libc's local time at `tz`: an IANA zone name, or ''
+// for "no TZ" (the system default). The toolbar clock ($time / $date) follows.
+// Parsing a config never touches the environment; the caller applies this on
+// commit, so a config that fails to load leaves the running zone alone.
+pub fn apply_timezone(tz string) {
+	if tz == '' {
+		os.unsetenv('TZ')
 	} else {
-		// Single monitor configuration (not an array)
-		monitor_config := parse_single_monitor(monitors_val, 0, source_path) or { return monitors }
-		monitors << monitor_config
+		os.setenv('TZ', tz, true)
 	}
-	
-	return monitors
+	C.tzset()
 }
 
-// Parse a single monitor configuration
-fn parse_single_monitor(monitor_val toml.Any, index int, source_path string) !MonitorConfig {
-	mut workspaces := []string{}
-	
-	// Parse workspaces array
-  if workspace_array := get_toml_string_array(monitor_val, 'workspaces') {
-		for j, ws_val in workspace_array {
-			workspace_name := ws_val.trim_space()
-			if workspace_name.len == 0 {
-				return error('Invalid monitor config in ${source_path}: workspace name at monitor ${index}, workspace ${j} cannot be empty')
-			}
-			workspaces << workspace_name
+// load_config_into reads a config.toml file into ct.
+pub fn load_config_into(mut ct ConfigTarget, path string) ! {
+	text := os.read_file(path) or { return error('cannot read ${path}: ${err}') }
+	parse_config_into(mut ct, text, os.dir(path)) or { return error('${path}: ${err}') }
+}
+
+// parse_config_into is the file-less half of load_config_into (used by tests).
+pub fn parse_config_into(mut ct ConfigTarget, text string, base_dir string) ! {
+	doc := toml.parse_text(text) or { return error('invalid TOML: ${err}') }
+	root := doc.to_any().as_map()
+
+	// [general]
+	mut mod := u32(0)
+	if g := root['general'] {
+		gm := g.as_map()
+		if m := gm['mod'] {
+			mod = parse_modifier_name(m.string(), 0) or { return error('general.mod: ${err}') }
 		}
-		
-		// Validate workspace count
-		if workspaces.len > 10 {
-			return error('Invalid monitor config in ${source_path}: monitor ${index} has ${workspaces.len} workspaces, maximum 10 allowed')
+		if t := gm['theme'] {
+			ct.theme_path = resolve_path(base_dir, t.string())
 		}
-		
-		// Validate workspace name uniqueness within this monitor
-		mut seen := map[string]bool{}
-		for workspace_name in workspaces {
-			if seen[workspace_name] {
-				return error('Invalid monitor config in ${source_path}: monitor ${index} has duplicate workspace name "${workspace_name}"')
-			}
-			seen[workspace_name] = true
+		if tz := gm['timezone'] {
+			ct.timezone = tz.string() // applied by the caller on commit (see apply_timezone)
+		}
+		if tf := gm['time_format'] {
+			ct.time_format = tf.string()
+		}
+		if df := gm['date_format'] {
+			ct.date_format = df.string()
 		}
 	}
-	
-	return MonitorConfig{
-		workspaces: workspaces
+	if mod == 0 {
+		mod = default_mod_mask
+	}
+	ct.mod_mask = mod
+
+	// [layout]
+	ct.master_ratio = default_master_ratio
+	if l := root['layout'] {
+		if r := l.as_map()['master_ratio'] {
+			ratio := r.f32()
+			if ratio < 0.1 || ratio > 0.9 {
+				return error('layout.master_ratio must be between 0.1 and 0.9')
+			}
+			ct.master_ratio = ratio
+		}
+	}
+
+	// [[monitors]]
+	ct.monitor_configs = []MonitorConfig{}
+	if ms := root['monitors'] {
+		for m in ms.array() {
+			mut titles := []string{}
+			if w := m.as_map()['workspaces'] {
+				for t in w.array() {
+					titles << t.string()
+				}
+			}
+			if titles.len == 0 || titles.len > 10 {
+				return error('each [[monitors]] entry needs 1..10 workspaces')
+			}
+			ct.monitor_configs << MonitorConfig{titles}
+		}
+	}
+
+	// [keybindings]
+	ct.keybindings = []KeyBinding{}
+	if kb := root['keybindings'] {
+		for k, v in kb.as_map() {
+			mods, key := parse_keybinding(k, mod) or { return error('keybinding "${k}": ${err}') }
+			action := parse_action(v.string()) or {
+				return error('keybinding "${k}" action "${v.string()}": ${err}')
+			}
+			ct.keybindings << KeyBinding{mods, key, action, k}
+		}
 	}
 }
 
-// Validate configuration values for any ConfigTarget object
-pub fn validate_config_target(target ConfigTarget) ! {
-	if target.border_width < min_border_width || target.border_width > max_border_width {
-		return error('Invalid border_width: must be between ${min_border_width} and ${max_border_width}, got ${target.border_width}')
-	}
-
-	if target.gap_size < min_gap_size || target.gap_size > max_gap_size {
-		return error('Invalid gap_size: must be between ${min_gap_size} and ${max_gap_size}, got ${target.gap_size}')
-	}
-
-	if target.theme_name.len == 0 {
-		return error('Invalid theme_name: cannot be empty')
-	}
-
-	// Validate keybindings
-	for key, command in target.keybindings {
-		validate_keybinding(key, 'configuration')!
-		if command.trim_space().len == 0 {
-			return error('Invalid keybinding: command for key "${key}" cannot be empty')
+// with_default_bindings adds the built-in bindings that the config did not
+// already cover: a default is skipped when its key combination is bound to
+// something else, or when its action is bound to some other key (so rebinding
+// "reload" to "Mod+F5" doesn't leave Mod+r around as well).
+pub fn with_default_bindings(bindings []KeyBinding, mod_mask u32) []KeyBinding {
+	mut out := bindings.clone()
+	for src, text in default_bindings {
+		mods, key := parse_keybinding(src, mod_mask) or { continue }
+		action := parse_action(text) or { continue }
+		mut taken := false
+		for b in bindings {
+			if (b.mods == mods && b.key == key) || b.action.kind == action.kind {
+				taken = true
+				break
+			}
+		}
+		if !taken {
+			out << KeyBinding{mods, key, action, src}
 		}
 	}
+	return out
+}
 
-	// Validate monitor configurations
-	for i, monitor in target.monitor_configs {
-		if monitor.workspaces.len > 10 {
-			return error('Invalid monitor ${i}: maximum 10 workspaces allowed, got ${monitor.workspaces.len}')
+// default_bindings are the built-in keys for the actions added after the
+// first release; config.toml can rebind any of them (see with_default_bindings).
+pub const default_bindings = {
+	'Mod+Tab':       'workspace next'
+	'Mod+Shift+Tab': 'workspace prev'
+	'Mod+r':         'reload'
+	'Mod+Shift+r':   'restart'
+	'Mod+f':         'fullscreen'
+}
+
+pub const default_mod_mask = u32(1) << 6 // Mod4 (Super)
+pub const default_master_ratio = f32(0.55)
+
+fn resolve_path(base_dir string, p string) string {
+	if os.is_abs_path(p) || base_dir == '' {
+		return p
+	}
+	return os.join_path(base_dir, p)
+}
+
+// parse_modifier_name maps a modifier word to its X mask. "Mod" is whatever
+// the config's [general] mod says (passed in as mod_mask; 0 = not allowed).
+pub fn parse_modifier_name(name string, mod_mask u32) !u32 {
+	return match name.to_lower() {
+		'shift' {
+			u32(1) << 0
 		}
-		
-		// Validate workspace name uniqueness within this monitor
-		mut seen := map[string]bool{}
-		for j, workspace_name in monitor.workspaces {
-			if workspace_name.trim_space().len == 0 {
-				return error('Invalid monitor ${i}: workspace name at index ${j} cannot be empty')
+		'ctrl', 'control' {
+			u32(1) << 2
+		}
+		'alt', 'mod1' {
+			u32(1) << 3
+		}
+		'mod2' {
+			u32(1) << 4
+		}
+		'mod3' {
+			u32(1) << 5
+		}
+		'super', 'win', 'mod4' {
+			u32(1) << 6
+		}
+		'mod5' {
+			u32(1) << 7
+		}
+		'mod' {
+			if mod_mask == 0 {
+				return error('"Mod" cannot be used to define itself')
 			}
-			if seen[workspace_name] {
-				return error('Invalid monitor ${i}: duplicate workspace name "${workspace_name}"')
+			mod_mask
+		}
+		else {
+			return error('unknown modifier "${name}"')
+		}
+	}
+}
+
+// parse_keybinding splits "Mod+Shift+Enter" into (modifier mask, keysym name).
+// The last '+'-separated part is the key; everything before it is a modifier.
+pub fn parse_keybinding(s string, mod_mask u32) !(u32, string) {
+	parts := s.split('+').map(it.trim_space())
+	if parts.len == 0 || parts.last() == '' {
+		return error('empty key')
+	}
+	mut mods := u32(0)
+	for p in parts[..parts.len - 1] {
+		mods |= parse_modifier_name(p, mod_mask)!
+	}
+	return mods, normalize_key_name(parts.last())
+}
+
+// normalize_key_name maps friendly names to X keysym names.
+pub fn normalize_key_name(k string) string {
+	return match k.to_lower() {
+		'enter' {
+			'Return'
+		}
+		'return' {
+			'Return'
+		}
+		'space' {
+			'space'
+		}
+		'tab' {
+			'Tab'
+		}
+		'esc', 'escape' {
+			'Escape'
+		}
+		'backspace' {
+			'BackSpace'
+		}
+		'left' {
+			'Left'
+		}
+		'right' {
+			'Right'
+		}
+		'up' {
+			'Up'
+		}
+		'down' {
+			'Down'
+		}
+		else {
+			if k.len == 1 {
+				k.to_lower()
+			} else {
+				k
 			}
-			seen[workspace_name] = true
+		}
+	}
+}
+
+// parse_action parses "workspace 3", "warp 2", "focus left", "move down",
+// "exec kitty", "close", "collapse", "restore", "quit", "workspace next",
+// "workspace prev", "reload", "restart", "fullscreen".
+// Workspace numbers are 1-based in the file (and 10 is the "0" key's workspace).
+pub fn parse_action(s string) !Action {
+	text := s.trim_space()
+	word := text.all_before(' ')
+	arg := text.all_after_first(' ').trim_space()
+	arg_is_empty := text.index(' ') == none
+	match word {
+		'workspace', 'warp' {
+			if word == 'workspace' && arg in ['next', 'prev', 'previous'] {
+				return Action{
+					kind: if arg == 'next' {
+						ActionKind.workspace_next
+					} else {
+						ActionKind.workspace_prev
+					}
+				}
+			}
+			n := arg.int()
+			if arg_is_empty || n < 1 || n > 10 || n.str() != arg {
+				return error('"${word}" needs a workspace number 1..10' +
+					if word == 'workspace' { ', "next" or "prev"' } else { '' })
+			}
+			return Action{
+				kind: if word == 'workspace' { ActionKind.workspace } else { ActionKind.warp }
+				n:    n - 1
+			}
+		}
+		'focus', 'move' {
+			dir := Direction.parse(arg) or {
+				return error('"${word}" needs up, down, left or right')
+			}
+			return Action{
+				kind: if word == 'focus' { ActionKind.focus } else { ActionKind.move }
+				dir:  dir
+			}
+		}
+		'exec' {
+			if arg_is_empty || arg == '' {
+				return error('"exec" needs a command')
+			}
+			return Action{
+				kind: .exec
+				cmd:  arg
+			}
+		}
+		'close' {
+			return Action{
+				kind: .close
+			}
+		}
+		'collapse' {
+			return Action{
+				kind: .collapse
+			}
+		}
+		'restore' {
+			return Action{
+				kind: .restore
+			}
+		}
+		'quit' {
+			return Action{
+				kind: .quit
+			}
+		}
+		'reload' {
+			return Action{
+				kind: .reload
+			}
+		}
+		'restart' {
+			return Action{
+				kind: .restart
+			}
+		}
+		'fullscreen' {
+			return Action{
+				kind: .fullscreen
+			}
+		}
+		else {
+			return error('unknown action "${word}"')
 		}
 	}
 }

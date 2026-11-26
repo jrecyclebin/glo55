@@ -1,6 +1,7 @@
-module glo55
-description "A tiling window manager for Linux X11 written in V"
-version "0.1.0"
-dependencies {
-    toml: {}
+Module {
+	name: 'glo55'
+	description: 'Glo55: a master/stack tiling window manager for X11 with image/element based themes'
+	version: '0.1.0'
+	license: 'MIT'
+	dependencies: []
 }

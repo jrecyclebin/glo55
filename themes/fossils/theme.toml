@@ -1,0 +1,292 @@
+# Fossils of the Machines for Glo55 - the Enlightenment E16 theme by DarkAlloy
+# (scarab@egyptian.net, http://darkalloy.catarsys.net), free for non-commercial use;
+# see README.md and ABOUT/README for the licence and credits.
+#
+# Window frame: translated mechanically from the theme's own borders/default.cfg
+# by tools/e16_border_to_toml.py (part positions, stretch/tile/9-slice sizes, the
+# close/iconify actions, which parts a rolled-up bar keeps), using the original
+# PNGs unmodified. Added by hand: the stick and fullscreen buttons (this E16
+# border has neither), the text colours (E16's TEXT1 textclass), the toolbar
+# and the desktop. E16 has no toolbar like this one: it is built from the same
+# theme's pipe, button and pager art.
+#
+# E16's frame is *shaped*: the orb ornament and the 71px tall left edge are cut
+# out of the window, the rest of the left side is a 1px black line.
+# frame_normal.png is the unfocused look (a grey orb), frame_active.png the
+# focused one (the red orb): $img_b_frame switches.
+
+background       = "artwork/backgrounds/fotm-moon.jpg"   # E16's desktop 0, scaled to the screen
+background_scale = "stretch"
+font_files       = ["ttfonts/Satis.ttf"]                  # "Dissatisfaction", the theme's UI font
+
+[vars]
+desktop_color  = "#000000"
+font           = "Dissatisfaction"
+title_color    = "#000000"      # E16 TEXT1: black with a light shadow ...
+title_shadow   = "#b4b4b4"
+text_color     = "#ffffff"
+img_b_frame    = "artwork/borders/frame_normal.png"
+label_color    = "#c8c0b8"
+
+[[windows]]
+window_gap = 6
+shaped     = true
+
+# E16 DEFAULT border: 18 left, 1 right, 16 top, 4 bottom. A rolled-up window is the
+# 16px pipe alone (its KEEP_WHEN_SHADED parts: tbar, close, minimise, terminator).
+[windows.insets]
+left   = 18
+top    = 16
+right  = 1
+bottom = 4
+
+[windows.focused]
+title_color  = "#ffffff"        # ... and white with a black shadow when focused
+title_shadow = "#000000"
+img_b_frame  = "artwork/borders/frame_active.png"
+
+
+[windows.00_terminator]
+type = "image"
+path = "artwork/borders/terminator.png"
+scale = "none"
+left = { edge = "left", ratio = 1.0, offset = -32 }
+top = { edge = "top", ratio = 0.0, offset = 0 }
+right = { edge = "left", ratio = 1.0, offset = -16 }
+bottom = { edge = "top", ratio = 0.0, offset = 16 }
+
+[windows.01_tbar]
+type = "image"
+path = "artwork/borders/tbar.png"
+scale = "slice"
+slice = [32, 0, 2, 0]
+left = { edge = "left", ratio = 0.0, offset = 104 }
+top = { edge = "top", ratio = 0.0, offset = 0 }
+right = { edge = "left", ratio = 1.0, offset = -32 }
+bottom = { edge = "top", ratio = 0.0, offset = 16 }
+
+[windows.01_tbar_text]
+type = "text"
+content = "$title"
+font = "$font"
+size = 13
+fore = "$title_color"
+shadow = "$title_shadow"
+align = "center"
+left = { edge = "left", ratio = 0.0, offset = 108 }
+top = { edge = "top", ratio = 0.0, offset = 0 }
+right = { edge = "left", ratio = 1.0, offset = -82 }
+bottom = { edge = "top", ratio = 0.0, offset = 16 }
+
+[windows.02_frame]
+type = "image"
+path = "$img_b_frame"
+scale = "none"
+left = { edge = "left", ratio = 0.0, offset = 0 }
+top = { edge = "top", ratio = 0.0, offset = 0 }
+right = { edge = "left", ratio = 0.0, offset = 56 }
+bottom = { edge = "top", ratio = 0.0, offset = 71 }
+unless = "collapsed"
+
+[windows.03_close]
+type = "image"
+path = "artwork/borders/close.png"
+scale = "none"
+left = { edge = "left", ratio = 0.0, offset = 56 }
+top = { edge = "top", ratio = 0.0, offset = 0 }
+right = { edge = "left", ratio = 0.0, offset = 80 }
+bottom = { edge = "top", ratio = 0.0, offset = 16 }
+action = "close"
+
+[windows.04_minimise]
+type = "image"
+path = "artwork/borders/iconify.png"
+scale = "none"
+left = { edge = "left", ratio = 0.0, offset = 80 }
+top = { edge = "top", ratio = 0.0, offset = 0 }
+right = { edge = "left", ratio = 0.0, offset = 104 }
+bottom = { edge = "top", ratio = 0.0, offset = 16 }
+action = "collapse"
+
+# --- the buttons E16's DEFAULT border does not have: stick and fullscreen. They
+# sit on the pipe, left of the terminator, so the fullscreen toggle is the
+# rightmost button (mod+f does the same). The art is the close barrel with its
+# glyph painted out and a new one drawn (tools/fossils_button_art.sh -> glo55/).
+# Stick is decorative, as in Blue Steel.
+[windows.05_stick]
+type = "image"
+path = "glo55/stick.png"
+scale = "none"
+left = { edge = "left", ratio = 1.0, offset = -80 }
+top = { edge = "top", ratio = 0.0, offset = 0 }
+right = { edge = "left", ratio = 1.0, offset = -56 }
+bottom = { edge = "top", ratio = 0.0, offset = 16 }
+
+[windows.06_fullscreen]
+type = "image"
+path = "glo55/fullscreen.png"
+scale = "none"
+left = { edge = "left", ratio = 1.0, offset = -56 }
+top = { edge = "top", ratio = 0.0, offset = 0 }
+right = { edge = "left", ratio = 1.0, offset = -32 }
+bottom = { edge = "top", ratio = 0.0, offset = 16 }
+action = "fullscreen"
+
+[windows.07_resizer_left]
+type = "image"
+path = "artwork/borders/resizer.png"
+scale = "none"
+left = { edge = "left", ratio = 0.0, offset = 17 }
+top = { edge = "top", ratio = 1.0, offset = -4 }
+right = { edge = "left", ratio = 0.0, offset = 37 }
+bottom = { edge = "top", ratio = 1.0, offset = 0 }
+unless = "collapsed"
+
+[windows.08_resizer_mid]
+type = "image"
+path = "artwork/borders/resizer_v.png"
+scale = "tile"
+left = { edge = "left", ratio = 0.0, offset = 37 }
+top = { edge = "top", ratio = 1.0, offset = -4 }
+right = { edge = "left", ratio = 1.0, offset = -20 }
+bottom = { edge = "top", ratio = 1.0, offset = 0 }
+unless = "collapsed"
+
+[windows.09_resizer_right]
+type = "image"
+path = "artwork/borders/resizer.png"
+scale = "none"
+left = { edge = "left", ratio = 1.0, offset = -20 }
+top = { edge = "top", ratio = 1.0, offset = -4 }
+right = { edge = "left", ratio = 1.0, offset = 0 }
+bottom = { edge = "top", ratio = 1.0, offset = 0 }
+unless = "collapsed"
+
+[windows.10_edge_left]
+type = "image"
+path = "artwork/black.png"
+scale = "tile"
+left = { edge = "left", ratio = 0.0, offset = 17 }
+top = { edge = "top", ratio = 0.0, offset = 71 }
+right = { edge = "left", ratio = 0.0, offset = 18 }
+bottom = { edge = "top", ratio = 1.0, offset = -4 }
+unless = "collapsed"
+
+[windows.11_edge_right]
+type = "image"
+path = "artwork/black.png"
+scale = "tile"
+left = { edge = "left", ratio = 1.0, offset = -1 }
+top = { edge = "top", ratio = 0.0, offset = 16 }
+right = { edge = "left", ratio = 1.0, offset = 0 }
+bottom = { edge = "top", ratio = 1.0, offset = -4 }
+unless = "collapsed"
+
+# --------------------------------------------------------------- toolbars
+
+# The top bar is E16's own title pipe (tbar.png, 16px high like the window
+# bars): the clock sits on its left end, the terminator caps its right end, and
+# the workspaces are buttons embedded in the pipe between, drawn from the theme's
+# dialog button art (artwork/dialogs/button_*.png, the beveled rusty buttons of
+# the settings dialog): idle = the dark recessed face (button_in), hovered = the
+# raised metal one (button_out), the current workspace = the lit, rust-glowing
+# one (button_over), outlined with the pager's own white selection frame.
+
+[[toolbars]]
+height = 16
+
+[toolbars.focused]          # the toolbar of the monitor the mouse is on
+title_color  = "#ffffff"
+title_shadow = "#000000"
+
+[toolbars.00_pipe]
+type  = "image"
+path  = "artwork/borders/tbar.png"
+scale = "slice"
+slice = [32, 0, 2, 0]
+
+[toolbars.01_clock]
+type    = "text"
+content = "$time"
+font    = "$font"
+size    = 13
+fore    = "$title_color"
+shadow  = "$title_shadow"
+align   = "left"
+left    = { edge = "left", offset = 14 }
+right   = { edge = "left", offset = 320 }
+
+[toolbars.02_terminator]
+type  = "image"
+path  = "artwork/borders/terminator.png"
+scale = "none"
+left  = { edge = "right", offset = -16 }
+
+[toolbars.workspace_buttons]
+left          = { edge = "left", offset = 72 }
+right         = { edge = "right", offset = -18 }
+top           = { edge = "top", offset = 0 }
+bottom        = { edge = "bottom", offset = 0 }
+align         = "right"
+spacing       = 1
+padding       = 7
+
+[toolbars.workspace_buttons.normal]
+label_color = "#b8aea4"
+[toolbars.workspace_buttons.occupied]
+label_color = "#e4d8cc"
+[toolbars.workspace_buttons.active]
+label_color = "#ffffff"
+[toolbars.workspace_buttons.hover]
+label_color = "#ffffff"
+[toolbars.workspace_buttons.pressed]
+label_color = "#ffffff"
+
+[toolbars.workspace_buttons.00_idle]
+type  = "image"
+path  = "artwork/dialogs/button_in.png"
+scale = "slice"
+slice = [4, 4, 4, 4]
+when   = "normal"
+unless = "hover"
+
+[toolbars.workspace_buttons.01_hover]
+type  = "image"
+path  = "artwork/dialogs/button_out.png"
+scale = "slice"
+slice = [4, 4, 4, 4]
+when   = "hover"
+unless = "active,pressed"
+
+[toolbars.workspace_buttons.02_pressed]
+type  = "image"
+path  = "artwork/dialogs/button_in.png"
+scale = "slice"
+slice = [4, 4, 4, 4]
+when = "pressed"
+
+[toolbars.workspace_buttons.03_active]
+type  = "image"
+path  = "artwork/dialogs/button_over.png"
+scale = "slice"
+slice = [4, 4, 4, 4]
+when   = "active"
+unless = "pressed"
+
+[toolbars.workspace_buttons.04_outline]
+type  = "image"
+path  = "artwork/pager/pager.png"
+scale = "slice"
+slice = [4, 4, 4, 4]
+when  = "active"
+
+[toolbars.workspace_buttons.05_label]
+type    = "text"
+content = "$workspace"
+font    = "$font"
+size    = 12
+fore    = "$label_color"
+shadow  = "#000000"
+align   = "center"
+left    = { edge = "left", offset = 2 }
+right   = { edge = "right", offset = -2 }

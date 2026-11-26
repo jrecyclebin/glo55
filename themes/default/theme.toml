@@ -1,0 +1,225 @@
+# Glo55 theme.
+#
+# [vars]            global variables, referenced as $name in any string
+# [[windows]]       window frame style; the first entry is the default for all
+#                   monitors (an entry with `monitor = N`, or the Nth entry,
+#                   styles monitor N instead)
+# [[toolbars]]      toolbar style, same rules; `height` is in pixels
+# [x.focused]       reserved state tables (focused, hover, clicked, collapsed):
+#                   they override variables while that state is active.
+#                   Everything else under [[windows]]/[[toolbars]] is an element,
+#                   except [toolbars.workspace_buttons] (the workspace button region
+#                   and template, see below and README.md).
+#
+# Element positions are "offset pixels from an edge of the area". Offsets are
+# signed, so negative values move inwards from the right/bottom edges.
+# Text elements may use $title, $workspace, $workspaces and $time. A toolbar may also
+# have a [toolbars.workspace_buttons] region: one clickable button per workspace
+# (see README.md); there $workspace and $number are the button's own name and number.
+
+[vars]
+desktop_color = "#14161f"
+frame_color   = "#252838"
+accent        = "#4c566a"
+accent2       = "#394150"
+text_color    = "#c0caf5"
+dim_color     = "#7a88b8"
+title_color   = "#c0caf5"
+bar_left      = "#1b1e2e"
+bar_right     = "#2a2f48"
+pattern_path  = "patterns/grid.png"
+btn_back      = "#00000000"   # workspace button colours (overridden per button state)
+btn_fore      = "$dim_color"
+btn_mark      = "#00000000"
+
+# ---------------------------------------------------------------- windows
+
+[[windows]]
+border_width = 3
+window_gap   = 8
+
+[windows.focused]
+accent      = "#ff9e64"
+accent2     = "#bb9af7"
+title_color = "#ffffff"
+
+# A rolled-up (collapsed) window is just a slim bar, `collapsed_height` tall
+# (default 20px; a theme with a title-bar inset uses that instead).
+[windows.collapsed]
+frame_color = "#303552"
+
+[windows.background]
+type   = "solid"
+fore   = "$frame_color"
+
+# The title is drawn for every window, but a normal window's client covers it:
+# it only shows on a rolled-up bar, where the client is out of view.
+[windows.rolled_title]
+type    = "text"
+when    = "collapsed"
+left    = { edge = "left", offset = 8 }
+top     = { edge = "top", offset = 3 }
+right   = { edge = "right", offset = -28 }
+bottom  = { edge = "bottom", offset = -3 }
+fore    = "$title_color"
+content = "$title"
+font    = "monospace"
+size    = 12
+
+# This theme has no title bar, only a thin border, so its fullscreen button lives
+# on the rolled-up bar: a small outlined square at the right end (click = fullscreen
+# toggle, the same as mod+f).
+[windows.fullscreen_button]
+type   = "solid"
+when   = "collapsed"
+left   = { edge = "right", offset = -22 }
+top    = { edge = "top", offset = 4 }
+right  = { edge = "right", offset = -8 }
+bottom = { edge = "bottom", offset = -4 }
+fore   = "$title_color"
+action = "fullscreen"
+
+[windows.fullscreen_button_inside]
+type   = "solid"
+when   = "collapsed"
+left   = { edge = "right", offset = -20 }
+top    = { edge = "top", offset = 6 }
+right  = { edge = "right", offset = -10 }
+bottom = { edge = "bottom", offset = -6 }
+fore   = "$frame_color"
+
+[windows.border_top]
+type      = "gradient"
+bottom    = { edge = "top", offset = 3 }
+fore      = "$accent"
+back      = "$accent2"
+direction = 0
+
+[windows.border_bottom]
+type      = "gradient"
+top       = { edge = "bottom", offset = -3 }
+fore      = "$accent2"
+back      = "$accent"
+direction = 0
+
+[windows.border_left]
+type      = "gradient"
+right     = { edge = "left", offset = 3 }
+fore      = "$accent"
+back      = "$accent2"
+direction = 90
+
+[windows.border_right]
+type      = "gradient"
+left      = { edge = "right", offset = -3 }
+fore      = "$accent2"
+back      = "$accent"
+direction = 90
+
+# --------------------------------------------------------------- toolbars
+
+[[toolbars]]
+height = 26
+
+[toolbars.focused]          # the toolbar of the monitor the mouse is on
+accent = "#ff9e64"
+text_color = "#ffffff"
+
+[toolbars.background]
+type      = "gradient"
+fore      = "$bar_left"
+back      = "$bar_right"
+direction = 0
+
+# a tiled, semi-transparent PNG over the gradient
+[toolbars.grid]
+type = "pattern"
+path = "$pattern_path"
+
+[toolbars.underline]
+type   = "solid"
+top    = { edge = "bottom", offset = -2 }
+fore   = "$accent"
+
+# One button per workspace of the monitor (so any number of workspaces fits).
+# The region is where the row goes; the elements are drawn once per button, with
+# the states normal / occupied / active / hover / pressed. Click a button to
+# switch to that workspace.
+[toolbars.workspace_buttons]
+left     = { edge = "left", offset = 34 }
+top      = { edge = "top", offset = 3 }
+right    = { edge = "left", offset = 420 }
+bottom   = { edge = "bottom", offset = -5 }
+align    = "left"
+spacing  = 2
+padding  = 8
+min_width = 22
+
+[toolbars.workspace_buttons.occupied]
+btn_fore = "$text_color"
+[toolbars.workspace_buttons.active]
+btn_fore = "$accent"
+btn_mark = "$accent"
+btn_back = "$bar_right"
+[toolbars.workspace_buttons.hover]
+btn_back = "$accent2"
+btn_fore = "$text_color"
+[toolbars.workspace_buttons.pressed]
+btn_back = "$accent"
+btn_fore = "#ffffff"
+
+[toolbars.workspace_buttons.00_face]
+type = "solid"
+fore = "$btn_back"
+
+[toolbars.workspace_buttons.01_mark]       # a 2px line under the current workspace
+type = "solid"
+fore = "$btn_mark"
+top  = { edge = "bottom", offset = -2 }
+
+[toolbars.workspace_buttons.02_label]
+type    = "text"
+content = "$workspace"
+font    = "monospace"
+size    = 13
+fore    = "$btn_fore"
+align   = "center"
+
+[toolbars.title]
+type    = "text"
+left    = { edge = "left", offset = 430 }
+top     = { edge = "top", offset = 2 }
+right   = { edge = "right", offset = -90 }
+bottom  = { edge = "bottom", offset = -4 }
+fore    = "$text_color"
+back    = "#00000000"
+content = "$title"
+font    = "monospace"
+size    = 13
+align   = "center"
+
+[toolbars.clock]
+type    = "text"
+left    = { edge = "right", offset = -80 }
+top     = { edge = "top", offset = 2 }
+right   = { edge = "right", offset = -10 }
+bottom  = { edge = "bottom", offset = -4 }
+fore    = "$text_color"
+back    = "#00000000"
+content = "$time"
+font    = "monospace"
+size    = 13
+align   = "right"
+
+# Example: a different toolbar for the second monitor.
+# [[toolbars]]
+# monitor = 1
+# height = 22
+#
+# Repeated entries with the same monitor index share a row when they fit;
+# the next entry wraps only when the current row lacks room. Pin the original
+# bar too: explicit entries replace the default selection. Rows and vertical
+# positions are fixed until reload; auto-width changes never reflow them.
+# [[toolbars]]
+# monitor = 0
+# height = 20

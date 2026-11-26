@@ -1,0 +1,289 @@
+# CORPO for Glo55 - a vaporwave / rusted alternate Win95 theme, made from J's
+# mockup and art assets (themes/corpo/assets/). See README.md.
+#
+# The window frame is J's win-* pieces, pixel-exact (scale none / tile, never
+# smoothed): bar cap + bar tile + bar end across the 25px title bar, 3px edges
+# and corners. Missing from the assets and drawn by tools/corpo_art.sh into
+# glo55/: the inactive state (every piece desaturated and dimmed) and the title
+# bar buttons (close, stick, collapse, fullscreen) on J's purple win-button.
+# $win / $btn switch between the active and inactive art; the focused state sets
+# them. Rolled-up windows are just the 25px bar.
+#
+# The toolbar is at the top, built from the bar-* pieces (made for a bottom bar:
+# a lit green top edge and a purple dithered shadow at the bottom read fine under
+# a top bar too, so they are used as they are). Workspace buttons on the LEFT,
+# recessed in the bar (bar-down); the clock on the RIGHT in the recessed amber
+# LCD slot (bar-button l/m/r, RoundedSquare).
+
+background        = "assets/bg-ruins.gif"
+background_scale  = "cover"           # keep the aspect ratio, fill the screen, nearest-neighbour
+font_files        = ["fonts/pixeltimes.ttf", "fonts/roundedsquare.ttf"]
+
+[vars]
+desktop_color = "#0d1a2a"
+font          = "Pixel Times"
+lcd_font      = "RoundedSquare:antialias=false"
+win           = "glo55/inactive"
+btn           = "glo55/inactive"
+title_color   = "#8d96ab"
+shadow_color  = "#773300"
+label_color   = "#8fa0c8"
+
+[[windows]]
+window_gap = 6
+
+# 3px edges and a 25px title bar, as drawn in the assets. A rolled-up window is the bar alone.
+[windows.insets]
+left   = 3
+top    = 25
+right  = 3
+bottom = 3
+
+[windows.focused]
+win          = "assets"
+btn          = "glo55/active"
+title_color  = "#ffffff"
+shadow_color = "#FF0099"
+
+[windows.00_bar_tile]
+type = "image"
+path = "$win/win-bartile.png"
+scale = "tile"
+left = { edge = "left", ratio = 0.0, offset = 46 }
+top = { edge = "top", ratio = 0.0, offset = 0 }
+right = { edge = "left", ratio = 1.0, offset = -5 }
+bottom = { edge = "top", ratio = 0.0, offset = 25 }
+
+[windows.01_bar_left]
+type = "image"
+path = "$win/win-barleft.png"
+scale = "none"
+left = { edge = "left", ratio = 0.0, offset = 0 }
+top = { edge = "top", ratio = 0.0, offset = 0 }
+right = { edge = "left", ratio = 0.0, offset = 46 }
+bottom = { edge = "top", ratio = 0.0, offset = 25 }
+
+[windows.02_bar_right]
+type = "image"
+path = "$win/win-barright.png"
+scale = "none"
+left = { edge = "left", ratio = 1.0, offset = -5 }
+top = { edge = "top", ratio = 0.0, offset = 0 }
+right = { edge = "left", ratio = 1.0, offset = 0 }
+bottom = { edge = "top", ratio = 0.0, offset = 25 }
+
+[windows.03_title]
+type = "text"
+content = "$title"
+font = "$font"
+size = 12
+fore = "$title_color"
+shadow = "$shadow_color"
+align = "left"
+left = { edge = "left", ratio = 0.0, offset = 24 }
+top = { edge = "top", ratio = 0.0, offset = 2 }
+right = { edge = "left", ratio = 1.0, offset = -84 }
+bottom = { edge = "top", ratio = 0.0, offset = 22 }
+
+[windows.04_close]
+type = "image"
+path = "$btn/btn-close.png"
+scale = "none"
+left = { edge = "left", ratio = 1.0, offset = -79 }
+top = { edge = "top", ratio = 0.0, offset = 6 }
+right = { edge = "left", ratio = 1.0, offset = -62 }
+bottom = { edge = "top", ratio = 0.0, offset = 21 }
+action = "close"
+
+[windows.05_stick]
+type = "image"
+path = "$btn/btn-stick.png"
+scale = "none"
+left = { edge = "left", ratio = 1.0, offset = -60 }
+top = { edge = "top", ratio = 0.0, offset = 6 }
+right = { edge = "left", ratio = 1.0, offset = -43 }
+bottom = { edge = "top", ratio = 0.0, offset = 21 }
+
+[windows.06_collapse]
+type = "image"
+path = "$btn/btn-collapse.png"
+scale = "none"
+left = { edge = "left", ratio = 1.0, offset = -41 }
+top = { edge = "top", ratio = 0.0, offset = 6 }
+right = { edge = "left", ratio = 1.0, offset = -24 }
+bottom = { edge = "top", ratio = 0.0, offset = 21 }
+action = "collapse"
+
+[windows.07_fullscreen]
+type = "image"
+path = "$btn/btn-fullscreen.png"
+scale = "none"
+left = { edge = "left", ratio = 1.0, offset = -22 }
+top = { edge = "top", ratio = 0.0, offset = 6 }
+right = { edge = "left", ratio = 1.0, offset = -5 }
+bottom = { edge = "top", ratio = 0.0, offset = 21 }
+action = "fullscreen"
+
+[windows.08_edge_left]
+type = "image"
+path = "$win/win-edgeleft.png"
+scale = "tile"
+left = { edge = "left", ratio = 0.0, offset = 0 }
+top = { edge = "top", ratio = 0.0, offset = 25 }
+right = { edge = "left", ratio = 0.0, offset = 3 }
+bottom = { edge = "top", ratio = 1.0, offset = -3 }
+unless = "collapsed"
+
+[windows.09_edge_right]
+type = "image"
+path = "$win/win-edgeright.png"
+scale = "tile"
+left = { edge = "left", ratio = 1.0, offset = -3 }
+top = { edge = "top", ratio = 0.0, offset = 25 }
+right = { edge = "left", ratio = 1.0, offset = 0 }
+bottom = { edge = "top", ratio = 1.0, offset = -3 }
+unless = "collapsed"
+
+[windows.10_edge_bottom]
+type = "image"
+path = "$win/win-edgebottom.png"
+scale = "tile"
+left = { edge = "left", ratio = 0.0, offset = 3 }
+top = { edge = "top", ratio = 1.0, offset = -3 }
+right = { edge = "left", ratio = 1.0, offset = -3 }
+bottom = { edge = "top", ratio = 1.0, offset = 0 }
+unless = "collapsed"
+
+[windows.11_corner_left]
+type = "image"
+path = "$win/win-cornerleft.png"
+scale = "none"
+left = { edge = "left", ratio = 0.0, offset = 0 }
+top = { edge = "top", ratio = 1.0, offset = -3 }
+right = { edge = "left", ratio = 0.0, offset = 3 }
+bottom = { edge = "top", ratio = 1.0, offset = 0 }
+unless = "collapsed"
+
+[windows.12_corner_right]
+type = "image"
+path = "$win/win-cornerright.png"
+scale = "none"
+left = { edge = "left", ratio = 1.0, offset = -3 }
+top = { edge = "top", ratio = 1.0, offset = -3 }
+right = { edge = "left", ratio = 1.0, offset = 0 }
+bottom = { edge = "top", ratio = 1.0, offset = 0 }
+unless = "collapsed"
+
+# --------------------------------------------------------------- toolbar
+
+[[toolbars]]
+height = 30
+
+[toolbars.00_tile]
+type  = "image"
+path  = "assets/bar-tile.png"
+scale = "tile"
+
+[toolbars.01_left]
+type  = "image"
+path  = "assets/bar-left.png"
+scale = "none"
+right = { edge = "left", offset = 56 }
+
+[toolbars.02_right]
+type  = "image"
+path  = "assets/bar-right.png"
+scale = "none"
+left  = { edge = "right", offset = -6 }
+
+# the clock: J's recessed slot (4 + 2 + 4 wide, 20 high), 78px, vertically centred
+[toolbars.03_clock_l]
+type  = "image"
+path  = "assets/bar-buttonl.png"
+scale = "none"
+left   = { edge = "right", offset = -92 }
+right  = { edge = "right", offset = -88 }
+top    = { edge = "top", offset = 5 }
+bottom = { edge = "top", offset = 25 }
+
+[toolbars.04_clock_m]
+type  = "image"
+path  = "assets/bar-buttonm.png"
+scale = "tile"
+left   = { edge = "right", offset = -88 }
+right  = { edge = "right", offset = -18 }
+top    = { edge = "top", offset = 5 }
+bottom = { edge = "top", offset = 25 }
+
+[toolbars.05_clock_r]
+type  = "image"
+path  = "assets/bar-buttonr.png"
+scale = "none"
+left   = { edge = "right", offset = -18 }
+right  = { edge = "right", offset = -14 }
+top    = { edge = "top", offset = 5 }
+bottom = { edge = "top", offset = 25 }
+
+[toolbars.06_clock]
+type    = "text"
+content = "$time"
+shadow  = "#000000"
+font    = "$lcd_font"
+size    = 16
+fore    = "#f0a818"
+align   = "center"
+left    = { edge = "right", offset = -88 }
+right   = { edge = "right", offset = -18 }
+top     = { edge = "top", offset = 5 }
+bottom  = { edge = "top", offset = 25 }
+
+# One recessed slot per workspace, packed against the left, after the bar's cap.
+# idle = the dark slot (bar-down), hover = lifted, pressed = darker, current =
+# the same slot turned amber, like the clock's LCD, with an amber label.
+[toolbars.workspace_buttons]
+left          = { edge = "left", offset = 16 }
+right         = { edge = "right", offset = -100 }
+top           = { edge = "top", offset = 0 }
+bottom        = { edge = "bottom", offset = 0 }
+align         = "left"
+spacing       = 2
+padding       = 9
+button_height = 20
+
+[toolbars.workspace_buttons.normal]
+label_color = "#8fa0c8"
+[toolbars.workspace_buttons.occupied]
+label_color = "#cfd8f0"
+[toolbars.workspace_buttons.active]
+label_color = "#f0b030"
+[toolbars.workspace_buttons.hover]
+label_color = "#ffffff"
+[toolbars.workspace_buttons.pressed]
+label_color = "#ffffff"
+
+[toolbars.workspace_buttons.02_pressed]
+type  = "image"
+path  = "glo55/slot-pressed.png"
+scale = "slice"
+slice = [4, 4, 4, 4]
+when = "pressed"
+
+[toolbars.workspace_buttons.03_active]
+type  = "image"
+path  = "glo55/slot-active.png"
+scale = "slice"
+slice = [4, 4, 4, 4]
+when   = "active"
+unless = "pressed"
+
+[toolbars.workspace_buttons.04_label]
+type      = "text"
+content   = "$workspace"
+font      = "$lcd_font"
+size      = 12
+fore      = "$label_color"
+align     = "center"
+left      = { edge = "left", offset = 2 }
+right     = { edge = "right", offset = -6 }
+top       = { edge = "top", offset = 1 }
+bottom    = { edge = "bottom", offset = -1 }

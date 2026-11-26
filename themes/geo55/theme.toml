@@ -1,0 +1,355 @@
+# geo55 — a Win95-inspired theme from J's floating desk-band screenshot.
+#
+# The toolbar is a centred, auto-width silver band (gripper, a decorative
+# computer icon, a live CPU meter, the clock and date, then workspace toggle
+# buttons). Window chrome is a classic 4px raised edge going all the way
+# around the title bar and the client as one unit; the title bar itself is
+# the compact silver band from the bottom-right of the shot (gripper, black
+# 8pt text, 16x14 caption buttons). Pixel-crisp: no filtering. See README.md.
+
+# background = "art/chitz.png"
+background = "art/marble.png"
+font_files = ["fonts/W95FA.otf"]
+
+[vars]
+# desktop_color = "#3b6ea5"
+font          = "W95FA:antialias=false:autohint=true"
+title_color   = "#CCCCCC"
+title_shadow  = "#666666"
+frame         = "dk-frame"
+gripper       = "dk-gripper"
+# the CPU percent ($cpu, 0-100) is filled in at run time
+
+[[windows]]
+window_gap        = 4
+shaped            = false
+collapsed_height  = 28
+
+[windows.focused]
+title_color   = "#000000"
+title_shadow  = "#999999"
+frame         = "frame"
+gripper       = "win-gripper"
+
+# unfocused: grey label, same silver chrome
+# (no extra state table needed beyond the default title_color)
+
+
+# 4px frame (2px raised outer + 2px sunken client) on the sides and bottom;
+# the top is 2px raised + 18px title + 2px of the client sunken = 22.
+[windows.insets]
+left   = 3
+top    = 29
+right  = 4
+bottom = 4
+
+[windows.00_frame]
+type = "image"
+path = "art/$frame.png"
+scale = "slice"
+slice = [4, 30, 4, 4]
+unless = "collapsed"
+
+[windows.00_frame_rolled]
+type = "image"
+path = "art/dk-band.png"
+scale = "slice"
+slice = [2, 2, 2, 2]
+when = "collapsed"
+
+[windows.01_gripper]
+type = "image"
+path = "art/$gripper.png"
+scale = "none"
+left   = { edge = "left",  offset = 4 }
+top    = { edge = "top",   offset = 4 }
+right  = { edge = "left",  offset = 14 }
+bottom = { edge = "top",   offset = 26 }
+
+[windows.02_title]
+type = "text"
+content = "$title"
+font = "$font:weight=bold"
+size = 13
+fore = "$title_color"
+shadow = "$title_shadow"
+align = "left"
+left   = { edge = "left",  offset = 22 }
+top    = { edge = "top",   offset = 5 }
+right  = { edge = "right", offset = -62 }
+bottom = { edge = "top",   offset = 23 }
+
+# Caption buttons: collapse, fullscreen, close (close is rightmost).
+# 16x14, 2px apart, 2px in from the outer bevel.
+[windows.10_collapse]
+type = "image"
+path = "art/win-shade.png"
+scale = "none"
+action = "collapse"
+left   = { edge = "right", offset = -63 }
+top    = { edge = "top",   offset = 3 }
+right  = { edge = "right", offset = -43 }
+bottom = { edge = "top",   offset = 23 }
+
+[windows.10_collapse_hover]
+type = "image"
+path = "art/win-shade-hover.png"
+scale = "none"
+action = "collapse"
+when = "hover"
+left   = { edge = "right", offset = -63 }
+top    = { edge = "top",   offset = 3 }
+right  = { edge = "right", offset = -43 }
+bottom = { edge = "top",   offset = 23 }
+
+# [windows.10_collapse_pressed]
+# type = "image"
+# path = "art/btn-collapse-pressed.png"
+# scale = "none"
+# action = "collapse"
+# when = "pressed"
+# left   = { edge = "right", offset = -56 }
+# top    = { edge = "top",   offset = 4 }
+# right  = { edge = "right", offset = -40 }
+# bottom = { edge = "top",   offset = 26 }
+
+[windows.11_fullscreen]
+type = "image"
+path = "art/win-max.png"
+scale = "none"
+action = "fullscreen"
+left   = { edge = "right", offset = -43 }
+top    = { edge = "top",   offset = 3 }
+right  = { edge = "right", offset = -23 }
+bottom = { edge = "top",   offset = 23 }
+
+[windows.11_fullscreen_hover]
+type = "image"
+path = "art/win-max-hover.png"
+scale = "none"
+action = "fullscreen"
+when = "hover"
+left   = { edge = "right", offset = -43 }
+top    = { edge = "top",   offset = 3 }
+right  = { edge = "right", offset = -23 }
+bottom = { edge = "top",   offset = 23 }
+
+# [windows.11_fullscreen_pressed]
+# type = "image"
+# path = "art/btn-fullscreen-pressed.png"
+# scale = "none"
+# action = "fullscreen"
+# when = "pressed"
+# left   = { edge = "right", offset = -38 }
+# top    = { edge = "top",   offset = 4 }
+# right  = { edge = "right", offset = -22 }
+# bottom = { edge = "top",   offset = 26 }
+
+[windows.12_close]
+type = "image"
+path = "art/win-close.png"
+scale = "none"
+action = "close"
+left   = { edge = "right", offset = -23 }
+top    = { edge = "top",   offset = 3 }
+right  = { edge = "right", offset = -3 }
+bottom = { edge = "top",   offset = 23 }
+
+[windows.12_close_hover]
+type = "image"
+path = "art/win-close-hover.png"
+scale = "none"
+action = "close"
+when = "hover"
+left   = { edge = "right", offset = -23 }
+top    = { edge = "top",   offset = 3 }
+right  = { edge = "right", offset = -3 }
+bottom = { edge = "top",   offset = 23 }
+
+# [windows.12_close_pressed]
+# type = "image"
+# path = "art/btn-close-pressed.png"
+# scale = "none"
+# action = "close"
+# when = "pressed"
+# left   = { edge = "right", offset = -20 }
+# top    = { edge = "top",   offset = 4 }
+# right  = { edge = "right", offset = -4 }
+# bottom = { edge = "top",   offset = 26 }
+
+# ---- toolbar: a floating, centred desk band ----
+[[toolbars]]
+monitor    = 0
+height     = 30
+align      = "left"
+auto_width = true
+width      = 100          # minimum; the bar grows with the clock and tabs
+
+[toolbars.00_band]
+type = "image"
+path = "art/band.png"
+scale = "slice"
+slice = [2, 2, 2, 2]
+
+[toolbars.01_gripper]
+type = "image"
+path = "art/gripper.png"
+scale = "none"
+left   = { edge = "left", offset = 4 }
+top    = { edge = "top",  offset = 4 }
+right  = { edge = "left", offset = 14 }
+bottom = { edge = "top",  offset = 26 }
+
+[toolbars.02_icon]
+type = "image"
+path = "art/jbin.png"
+scale = "none"
+left   = { edge = "left", offset = 20 }
+top    = { edge = "top",  offset = 7 }
+right  = { edge = "left", offset = 36 }
+bottom = { edge = "top",  offset = 23 }
+
+# Workspace tabs as small Win95 toggle buttons, growing the band to the right.
+[toolbars.workspace_buttons]
+left   = { edge = "left",   offset = 48 }
+top    = { edge = "top",    offset = 4 }
+right  = { edge = "right",  offset = -4 }
+bottom = { edge = "bottom", offset = -4 }
+align = "left"
+spacing = 2
+padding = 4
+min_width = 22
+button_height = 22
+
+[toolbars.workspace_buttons.face]
+type = "image"
+path = "art/ws-idle.png"
+scale = "slice"
+slice = [4, 4, 4, 4]
+
+[toolbars.workspace_buttons.face_occupied]
+type = "image"
+path = "art/ws-occupied.png"
+scale = "slice"
+slice = [4, 4, 4, 4]
+when = "occupied"
+unless = "active,pressed,hover"
+
+[toolbars.workspace_buttons.face_hover]
+type = "image"
+path = "art/ws-hover.png"
+scale = "slice"
+slice = [4, 4, 4, 4]
+when = "hover"
+unless = "pressed,active"
+
+[toolbars.workspace_buttons.face_active]
+type = "image"
+path = "art/ws-active.png"
+scale = "slice"
+slice = [4, 4, 4, 4]
+when = "active"
+unless = "pressed"
+
+[toolbars.workspace_buttons.face_pressed]
+type = "image"
+path = "art/ws-pressed.png"
+scale = "slice"
+slice = [4, 4, 4, 4]
+when = "pressed"
+
+[toolbars.workspace_buttons.label]
+type = "text"
+content = "$workspace"
+font = "$font"
+size = 13
+fore = "#000000"
+shadow = "#FFFFFF"
+align = "center"
+
+# ---- toolbar: a floating, centred desk band ----
+[[toolbars]]
+monitor    = 0
+height     = 30
+align      = "right"
+auto_width = true
+width      = 270          # minimum; the bar grows with the clock and tabs
+
+[toolbars.00_band]
+type = "image"
+path = "art/band.png"
+scale = "slice"
+slice = [2, 2, 2, 2]
+
+[toolbars.01_gripper]
+type = "image"
+path = "art/gripper.png"
+scale = "none"
+left   = { edge = "left", offset = 4 }
+top    = { edge = "top",  offset = 4 }
+right  = { edge = "left", offset = 14 }
+bottom = { edge = "top",  offset = 26 }
+
+[toolbars.02_meter_well]
+type = "image"
+path = "art/meter-well.png"
+scale = "none"
+left   = { edge = "left", offset = 20 }
+top    = { edge = "top",  offset = 6 }
+right  = { edge = "left", offset = 92 }
+bottom = { edge = "top",  offset = 24 }
+
+# The fill's width is $cpu percent of this slot (LED tile, no filtering).
+[toolbars.03_meter_fill]
+type = "image"
+path = "art/meter-fill.png"
+scale = "none"
+fill   = "$cpu"
+left   = { edge = "left", offset = 23 }
+top    = { edge = "top",  offset = 10 }
+right  = { edge = "left", offset = 89 }
+bottom = { edge = "top",  offset = 20 }
+
+[toolbars.04_div]
+type = "image"
+path = "art/divider.png"
+scale = "none"
+left   = { edge = "left", offset = 96 }
+top    = { edge = "top",  offset = 4 }
+right  = { edge = "left", offset = 100 }
+bottom = { edge = "top",  offset = 26 }
+
+[toolbars.05_date]
+type = "text"
+content = "$date"
+font = "$font"
+size = 13
+fore = "#000000"
+shadow = "#FFFFFF"
+align = "right"
+left   = { edge = "left", offset = 104 }
+top    = { edge = "top",  offset = 6 }
+right  = { edge = "left", offset = 192 }
+bottom = { edge = "top",  offset = 22 }
+
+[toolbars.08_clock_back]
+type = "image"
+path = "art/clock-inset.png"
+scale = "slice"
+slice = [2, 2, 2, 2]
+left   = { edge = "left", offset = 198 }
+top    = { edge = "top",  offset = 4 }
+right  = { edge = "left", offset = 264 }
+bottom = { edge = "top",  offset = 26 }
+
+[toolbars.09_clock]
+type = "text"
+content = "$time"
+font = "$font:weight=bold"
+size = 13
+fore = "#CCCCCC"
+align = "center"
+left   = { edge = "left", offset = 202 }
+top    = { edge = "top",  offset = 6 }
+right  = { edge = "left", offset = 262 }
+bottom = { edge = "top",  offset = 22 }

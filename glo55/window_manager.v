@@ -1332,8 +1332,9 @@ pub fn (mut wm WindowManager) draw_frame(win &Window) {
 			ele.render(mut wm.draw, buf, bounds, vars)
 		}
 	}
-	wm.draw.present(buf, win.frame, fw, fh)
-	wm.draw.free_buffer(buf)
+	// set the shape before copying the picture in: a copy is clipped to the
+	// window's current shape, so painting first would leave any area the new
+	// shape adds (a focused title's slip, say) unpainted until the next expose.
 	if sec.shaped {
 		mut mask := new_shape_mask(int(fw), int(fh))
 		for ele in sec.elements {
@@ -1347,6 +1348,8 @@ pub fn (mut wm WindowManager) draw_frame(win &Window) {
 		wm.conn.set_shape(win.frame, fw, fh, mask.pack())
 		wm.shaped_frames[win.frame] = true
 	}
+	wm.draw.present(buf, win.frame, fw, fh)
+	wm.draw.free_buffer(buf)
 }
 
 // redraw_frame repaints a window's frame when it is managed and on screen.

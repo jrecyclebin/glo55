@@ -221,7 +221,7 @@ right  = { edge = "right", offset = -6 }
 top    = { edge = "top", offset = 0 }
 bottom = { edge = "bottom", offset = 0 }
 align         = "right"   # left (default) | center | right: where the row sits in the region
-spacing       = 1         # pixels between buttons (default 2)
+spacing       = 1         # pixels between buttons (default 2; negative overlaps them)
 padding       = 7         # pixels each side of the label (default 6)
 min_width     = 0         # a button is at least this wide (default 0)
 max_width     = 0         # ... and at most this wide (0 = no limit)

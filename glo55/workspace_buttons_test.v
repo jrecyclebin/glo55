@@ -33,6 +33,15 @@ fn test_layout_aligns_left_center_right() {
 	assert centre[0].x == 145
 }
 
+fn test_layout_negative_spacing_overlaps_up_to_half_the_narrowest() {
+	region := ScreenRect{0, 0, 300, 20}
+	r := layout_buttons(region, [40, 40, 40], -10, 'right', 0)
+	assert r[1].x == r[0].x + 30
+	assert r[2].right() == 300
+	capped := layout_buttons(region, [40, 20, 40], -50, 'left', 0)
+	assert capped[1].x == 30 // overlap capped at 20 / 2
+}
+
 fn test_layout_follows_the_workspace_count() {
 	region := ScreenRect{0, 0, 300, 20}
 	three := layout_buttons(region, [20, 20, 20], 2, 'right', 0)

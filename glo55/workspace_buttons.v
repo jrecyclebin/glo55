@@ -30,7 +30,7 @@ pub struct WorkspaceButtons {
 pub mut:
 	area          ThemeArea // the region, in toolbar coordinates
 	align         string = 'left' // where the row sits in the region: left | center | right
-	spacing       int    = 2      // pixels between buttons
+	spacing       int    = 2      // pixels between buttons (negative: neighbours overlap)
 	padding       int    = 6      // pixels left and right of the label inside a button
 	min_width     int                          // buttons are at least this wide
 	max_width     int                          // 0 = no limit
@@ -160,15 +160,28 @@ pub fn (wb &WorkspaceButtons) button_width(text_w int) int {
 }
 
 // layout_buttons places buttons of the given widths in `region` (toolbar
-// coordinates), `spacing` apart, aligned left, centre or right. If they do not
-// all fit they are shrunk in proportion. Each is `button_height` tall (0 =
-// the whole region) and vertically centred.
+// coordinates), `spacing` apart, aligned left, centre or right. A negative
+// spacing overlaps neighbours (for slanted plates that lean into each other),
+// by at most half the narrowest button. If they do not all fit they are shrunk
+// in proportion. Each is `button_height` tall (0 = the whole region) and
+// vertically centred.
 pub fn layout_buttons(region ScreenRect, widths []int, spacing int, align string, button_height int) []ScreenRect {
 	n := widths.len
 	if n == 0 || region.width == 0 || region.height == 0 {
 		return []ScreenRect{}
 	}
-	mut gap := if spacing < 0 { 0 } else { spacing }
+	mut gap := spacing
+	if gap < 0 {
+		mut narrowest := widths[0]
+		for w in widths {
+			if w < narrowest {
+				narrowest = w
+			}
+		}
+		if gap < -narrowest / 2 {
+			gap = -narrowest / 2
+		}
+	}
 	mut ws := widths.clone()
 	mut sum := 0
 	for w in ws {

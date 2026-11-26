@@ -1,63 +1,54 @@
 # Fresh Breath
 
-Four palettes — Sedona, Painted Desert, Chillwave and Office Print — sharing
-one layout (`layout.toml`, via `extends`). A thin sheet of metal under glossy
-paint, with the brushed grain showing through, lit from the top left, every
-edge leaning 19°. The title bar floats a few pixels above the frame; a second
-plate (the register slip) sits behind it in the cool accent; four speed slashes
-step from warm to cool on a focused window (two grey slashes, no accent, when
-it is not).
+An original glo55 theme by J, in four palettes (Sedona, Painted Desert,
+Chillwave and Office Print) that share one layout (`layout.toml`, pulled in
+with `extends`). Each palette's `theme.toml` only sets four colours; its art
+lives in its own `art/`.
 
-The art is cut from J's layered SVGs (the mockup 2× chrome, downscaled with
-LANCZOS). Text-bearing plates (title, clock, workspace tabs, the rail) are
-rebuilt from the plate's own gloss profile and the palette grain, because the
-baked-in letters span almost the whole plate. Button hover and pressed faces
-come from the parts-sheet "states" strip, recolored per palette; close turns
-the title-bar colour on hover and the slip colour when pressed, as on the
-sheet. `tools/fresh_breath_art.py` regenerates everything.
+Windows are floating plates that lean 19°: a stone, the title plate with its
+register slip (a second plate in the cool accent, 3px above and 4px right),
+four speed slashes stepping from warm to cool, and the onyx button plate,
+all 4px above the frame. The frame is 5px wide with a 9px reveal wedge on the
+left. An unfocused window keeps a plainer plate and two slashes. The toolbar
+has the clock plate, the slashes, a rail across the screen carrying the
+focused window's title, and the workspace plates leaning into each other.
 
-## Button order
+## Where the art comes from
 
-The title-bar buttons are, left to right, **collapse, fullscreen, close** —
-the mockup's visual order, so close is rightmost. (Earlier Glo55 themes put
-fullscreen at the far right, as J asked then.) The three action elements in
-`layout.toml` (`31_collapse`, `34_fullscreen`, `37_close` and their
-hover/pressed overlays) can be reordered if you want fullscreen last again.
+Everything is cut from J's mockup SVGs, whose layers are PNGs at twice the
+mockup's size, by `make-art.py`:
 
-The square plate to the left of the title is decoration only.
+    python3 make-art.py DIR   # DIR holds fresh-breath-<palette>.svg
+
+It places each layer on the mockup's 1x grid, crops the part, halves it and
+writes `<palette>/art/` and `<palette>/theme.toml`. Sizes in `layout.toml`
+are the mockup's, pixel for pixel. Plates that carry text in the mockup
+(title, clock, rail, workspace plates) have the text painted out from the
+plate's own paint and grain, and glo55 draws the live text on top. Title
+plates are 9-slice images, so their middle stretches with the window.
+
+## Buttons
+
+Left to right: collapse, fullscreen, close, as in the mockup. Close turns the
+title paint on hover and the slip paint when pressed, as on the Window Parts
+sheet. The sheet only shows close, so collapse and fullscreen just lift on
+hover and sink when pressed. A rolled-up window shows a chevron in place of
+the box and a thin bar of frame under its title row. The stone left of the
+title is decoration.
+
+## What differs from the mockups
+
+- The title plate's length follows the window (20% of its width plus 120px),
+  because glo55 cannot measure the title to make the plate hug it. A title
+  that does not fit ends in an ellipsis.
+- No soft drop shadows. glo55 draws to a non-composited X server and cuts the
+  slanted plates with the 1-bit X SHAPE extension, so a half-transparent
+  shadow would only blend into black. Plate edges are hard.
+- The toolbar is an opaque window, so the space around its plates is a tile
+  of the palette's sky and print grain.
+- The menu design and the wallpaper are not used: the desktop is a flat
+  `desktop_color`, the palette's sky.
 
 ## Fonts
 
-[Barlow](https://github.com/jpt/barlow) and Barlow Condensed (SemiBold
-Italic), SIL Open Font License 1.1; the licence is in `fonts/OFL.txt`. Titles,
-the clock and the workspace labels use Barlow Condensed; Barlow itself is
-bundled for anything that wants a wider cut.
-
-## Wallpapers
-
-Each palette has a 2880×1800 desktop in the mockup's spirit (moon, palm,
-horizon and sea, in the palette's colours, with the textured grain). The
-mockup wallpaper was a loose sketch with windows and a caption on top; these
-are a cleaner, full-bleed version of the same scene, with a little moonlight
-and grain, and no chrome.
-
-## Soft shadows
-
-The mockup plates stand a few pixels off the wallpaper and cast a soft drop
-shadow. Glo55 draws to a non-composited X11 server and uses the 1-bit X SHAPE
-extension for the slanted edges and the gaps between floating plates: a
-semi-transparent shadow has nothing to blend against but the frame pixmap, so
-it would read as a dark halo. The shipped art keeps a tight anti-aliased
-fringe around each plate and relies on the painted thickness edges for depth.
-
-## Palettes
-
-| Palette        | Config                              | Title paint | Notes |
-|----------------|-------------------------------------|-------------|-------|
-| Sedona         | `test/config-fresh-breath-sedona.toml`   | amber       | |
-| Painted Desert | `test/config-fresh-breath-painted-desert.toml` | peach | |
-| Chillwave      | `test/config-fresh-breath-chillwave.toml` | `#ff5f8a`  | slip `#4ff0e6`, the paints from the parts sheet |
-| Office Print   | `test/config-fresh-breath-office-print.toml` | dusty coral | |
-
-    ./glo55 -c test/config-fresh-breath-chillwave.toml
-    # or:  CONFIG=test/config-fresh-breath-sedona.toml test/run-nested.sh
+Barlow Condensed SemiBold Italic, SIL Open Font License 1.1 (`fonts/OFL.txt`).

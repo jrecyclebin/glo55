@@ -7,7 +7,7 @@
 # (Use Mod1 if your host desktop grabs Super keys while testing in Xephyr.)
 mod = "Mod4"
 # Path to the theme, relative to this file.
-theme = "themes/fresh-breath/sedona/theme.toml"
+theme = "../themes/fresh-breath/sedona/theme.toml"
 # Time zone for the toolbar clock ($time). Without it the system zone (or $TZ) is used.
 timezone = "America/Denver"
 # Clock format (V time format): "HH:mm" 24h, "h:mm a" 12h, "HH:mm:ss" ...
@@ -20,7 +20,7 @@ master_ratio = 0.55
 # One [[monitors]] entry per physical monitor, in Xinerama order.
 # Monitors without an entry get workspaces 1..5.
 [[monitors]]
-workspaces = ["main", "web", "code", "chat", "media"]
+workspaces = ["1", "2", "3", "4"]
 
 [[monitors]]
 workspaces = ["terminal", "browser", "documents", "4", "5", "6", "7", "8", "9", "temp"]

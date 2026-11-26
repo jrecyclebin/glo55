@@ -1,406 +1,375 @@
-# Fresh Breath - the shared layout of the four palettes (Sedona, Painted
-# Desert, Chillwave, Office Print). A palette's theme.toml `extends` this
-# file, adds its colours under [vars] and its art/ directory; image and font
-# paths here are relative to that palette's directory. See README.md.
+# Fresh Breath - the layout the four palettes share (Sedona, Painted Desert,
+# Chillwave, Office Print). Each palette's theme.toml `extends` this file and
+# sets its colours under [vars]; image and font paths here are relative to the
+# palette's own directory, so every palette brings its own art/.
 #
-# Every plate is a thin sheet of metal under glossy paint, edges leaning 19°.
-# The title bar floats a few pixels above the frame (shaped so the desktop
-# shows through the gaps). Unfocused windows use the muted plates and two
-# grey slashes; focused windows use the accent paint and four speed slashes.
+# Sizes are the mockup's, pixel for pixel. A window is drawn as floating
+# plates: the title row (stone, title plate, speed slashes, button plate) sits
+# 4px above the frame, and the desktop shows through the gap. Edges lean 19°.
 #
-# Title-bar buttons are, left to right: collapse, fullscreen, close — the
-# mockup's visual order, so close is rightmost. To put fullscreen last again
-# (as in earlier Glo55 themes), swap the three action blocks below and their
-# hover/pressed overlays.
+#   y 0..3    room for the register slip, which pokes 3px above the title
+#   y 3..29   the title row, 26px
+#   y 33..    the frame: 9px on the left (the reveal wedge), 5px elsewhere
 #
-# Toolbar (top): clock + date plate on the left, speed slashes, a thin full-
-# width rail with the focused window's title in tracked small caps, and the
-# workspace plates on the right (the active one in cream).
+# The title plate's length follows the window: 20% of its width plus 120px
+# (the mockup's plates hug their text, which glo55 cannot measure). A title
+# that does not fit ends in an ellipsis.
 
-background        = "art/desktop.png"
-background_scale  = "cover"
-background_filter = "linear"
-font_files        = [
-    "../fonts/BarlowCondensed-SemiBoldItalic.ttf",
-    "../fonts/Barlow-Medium.ttf",
-    "../fonts/Barlow-Regular.ttf",
-]
+font_files        = ["../fonts/BarlowCondensed-SemiBoldItalic.ttf"]
 
 [vars]
-font          = "Barlow Condensed"
-font_ui       = "Barlow"
-win           = "art/inactive"
-title_color   = "$title_idle"
+font        = "Barlow Condensed:style=SemiBold Italic"
+state       = "unfocused"
+title_color = "$title_idle"
+label       = "$title_idle"
 
 [[windows]]
-window_gap        = 8
-shaped            = true
-collapsed_height  = 40
+window_gap       = 10
+shaped           = true
+collapsed_height = 39
 
 [windows.insets]
-left   = 15
-top    = 41
-right  = 11
-bottom = 12
+left   = 9
+top    = 38
+right  = 5
+bottom = 5
 
 [windows.focused]
-win         = "art/active"
+state       = "focused"
 title_color = "$title_on"
 
-# The cropped frame chrome, sitting a few pixels under the floating title.
+# ---------------------------------------------------------------- frame
+
 [windows.00_frame]
 type   = "image"
-path   = "$win/frame.png"
+path   = "art/$state/frame.png"
 scale  = "slice"
-slice  = [12, 8, 9, 10]
+slice  = [9, 5, 5, 5]
 unless = "collapsed"
-left   = { edge = "left",  offset = 3 }
-top    = { edge = "top",   offset = 33 }
-right  = { edge = "right", offset = 0 }
-bottom = { edge = "bottom", offset = 0 }
+top    = { edge = "top", offset = 33 }
 
-# Reveal wedge: the left frame edge thickens toward the bottom.
+# The reveal wedge: the left edge thickens toward the bottom.
 [windows.01_wedge]
 type   = "image"
-path   = "$win/wedge.png"
+path   = "art/$state/wedge.png"
 scale  = "stretch"
 unless = "collapsed"
-left   = { edge = "left",  offset = 9 }
-top    = { edge = "top",   offset = 41 }
-right  = { edge = "left",  offset = 18 }
-bottom = { edge = "bottom", offset = -12 }
+left   = { edge = "left", offset = 0 }
+right  = { edge = "left", offset = 9 }
+top    = { edge = "top", offset = 54 }
+bottom = { edge = "bottom", offset = -5 }
 
-# Decorative square plate, left of the title. Not a button.
-[windows.02_stone]
+# A rolled-up window keeps a thin bar of frame under its title row.
+[windows.02_shaded_bar]
 type   = "image"
-path   = "$win/stone.png"
-scale  = "none"
-left   = { edge = "left", offset = 2 }
-top    = { edge = "top",  offset = 2 }
-right  = { edge = "left", offset = 43 }
-bottom = { edge = "top",  offset = 42 }
-
-# Title plate (register slip is the right cap of the 9-slice). Focused is
-# 3px taller because of the slip, so the idle plate sits 3px lower.
-[windows.10_title]
-type   = "image"
-path   = "art/active/title.png"
+path   = "art/shaded-bar.png"
 scale  = "slice"
-slice  = [28, 6, 36, 10]
-when   = "focused"
-left   = { edge = "left",  offset = 24 }
-top    = { edge = "top",   offset = 0 }
-right  = { edge = "right", offset = -198 }
-bottom = { edge = "top",   offset = 48 }
+slice  = [12, 2, 12, 2]
+when   = "collapsed"
+top    = { edge = "top", offset = 33 }
+bottom = { edge = "top", offset = 39 }
 
-[windows.11_title_idle]
+# ------------------------------------------------------------ title row
+
+# The stone: the square plate left of the title (decoration, not a button).
+[windows.10_stone]
 type   = "image"
-path   = "art/inactive/title.png"
+path   = "art/$state/stone.png"
+left   = { edge = "left", offset = 0 }
+right  = { edge = "left", offset = 30 }
+top    = { edge = "top", offset = 3 }
+bottom = { edge = "top", offset = 29 }
+
+# Focused: title paint, with the register slip 3px above and 4px right.
+[windows.11_title]
+type   = "image"
+path   = "art/focused/title.png"
 scale  = "slice"
-slice  = [24, 6, 28, 10]
-unless = "focused"
-left   = { edge = "left",  offset = 24 }
-top    = { edge = "top",   offset = 3 }
-right  = { edge = "right", offset = -173 }
-bottom = { edge = "top",   offset = 48 }
-
-[windows.12_title_text]
-type    = "text"
-content = "$title"
-font    = "$font"
-size    = 18
-fore    = "$title_color"
-align   = "left"
-left    = { edge = "left",  offset = 52 }
-top     = { edge = "top",   offset = 6 }
-right   = { edge = "right", offset = -210 }
-bottom  = { edge = "top",   offset = 40 }
-
-# Speed slashes: four (focused) or two grey (idle), just left of the buttons.
-[windows.20_slashes]
-type   = "image"
-path   = "art/active/slashes.png"
-scale  = "none"
+slice  = [14, 3, 18, 3]
 when   = "focused"
-left   = { edge = "right", offset = -198 }
-top    = { edge = "top",   offset = 6 }
-right  = { edge = "right", offset = -132 }
-bottom = { edge = "top",   offset = 43 }
+left   = { edge = "left", offset = 23 }
+right  = { edge = "left", ratio = 0.2, offset = 124 }
+top    = { edge = "top", offset = 0 }
+bottom = { edge = "top", offset = 29 }
 
-[windows.21_slashes_idle]
+[windows.12_title_idle]
 type   = "image"
-path   = "art/inactive/slashes.png"
-scale  = "none"
+path   = "art/unfocused/title.png"
+scale  = "slice"
+slice  = [12, 2, 12, 2]
 unless = "focused"
-left   = { edge = "right", offset = -173 }
-top    = { edge = "top",   offset = 6 }
-right  = { edge = "right", offset = -132 }
-bottom = { edge = "top",   offset = 43 }
+left   = { edge = "left", offset = 23 }
+right  = { edge = "left", ratio = 0.2, offset = 120 }
+top    = { edge = "top", offset = 3 }
+bottom = { edge = "top", offset = 29 }
 
-# Button plate. The three actions sit on top; hover/pressed overlay the
-# hovered cell (close turns the title-bar colour on hover and the slip
-# colour when pressed, as on the parts sheet).
-[windows.30_buttons]
-type   = "image"
-path   = "$win/buttons.png"
-scale  = "none"
-left   = { edge = "right", offset = -128 }
-top    = { edge = "top",   offset = 0 }
-right  = { edge = "right", offset = -11 }
-bottom = { edge = "top",   offset = 45 }
+[windows.13_title_text]
+type           = "text"
+content        = "$title"
+font           = "$font"
+size           = 16
+fore           = "$title_color"
+transform      = "upper"
+letter_spacing = 1
+left           = { edge = "left", offset = 41 }
+right          = { edge = "left", ratio = 0.2, offset = 108 }
+top            = { edge = "top", offset = 5 }
+bottom         = { edge = "top", offset = 29 }
 
-# --- collapse, fullscreen, close (mockup order; close is rightmost) ---
-[windows.31_collapse]
+# Speed slashes, right after the title plate: four stepping from warm to
+# cool when focused, two plain ones when not.
+[windows.14_slashes]
 type   = "image"
-path   = "art/active/btn-collapse.png"
-scale  = "none"
+path   = "art/$state/slashes.png"
+left   = { edge = "left", ratio = 0.2, offset = 121 }
+right  = { edge = "left", ratio = 0.2, offset = 179 }
+top    = { edge = "top", offset = 3 }
+bottom = { edge = "top", offset = 29 }
+
+# ------------------------------------------------------------ buttons
+# The onyx plate, flush with the frame's right edge: collapse, fullscreen,
+# close (the mockup's _ □ ×). A rolled-up window shows a chevron in place of
+# the box. Close turns the title paint on hover and the slip paint when
+# pressed, as on the parts sheet; the other two lift and sink.
+
+[windows.20_buttons]
+type   = "image"
+path   = "art/buttons.png"
+unless = "collapsed"
+left   = { edge = "right", offset = -100 }
+top    = { edge = "top", offset = 3 }
+bottom = { edge = "top", offset = 29 }
+
+[windows.21_buttons_shaded]
+type   = "image"
+path   = "art/buttons-shaded.png"
+when   = "collapsed"
+left   = { edge = "right", offset = -100 }
+top    = { edge = "top", offset = 3 }
+bottom = { edge = "top", offset = 29 }
+
+# Hit areas: invisible, always there, so the pointer can find the buttons
+# before their hover faces exist.
+[windows.22_collapse_hit]
+type   = "solid"
+fore   = "#00000000"
 action = "collapse"
-left   = { edge = "right", offset = -128 }
-top    = { edge = "top",   offset = 3 }
-right  = { edge = "right", offset = -72 }
-bottom = { edge = "top",   offset = 44 }
+left   = { edge = "right", offset = -84 }
+right  = { edge = "right", offset = -60 }
+top    = { edge = "top", offset = 3 }
+bottom = { edge = "top", offset = 29 }
 
-[windows.32_collapse_hover]
+[windows.22_fullscreen_hit]
+type   = "solid"
+fore   = "#00000000"
+action = "fullscreen"
+left   = { edge = "right", offset = -60 }
+right  = { edge = "right", offset = -36 }
+top    = { edge = "top", offset = 3 }
+bottom = { edge = "top", offset = 29 }
+
+[windows.22_close_hit]
+type   = "solid"
+fore   = "#00000000"
+action = "close"
+left   = { edge = "right", offset = -36 }
+right  = { edge = "right", offset = -12 }
+top    = { edge = "top", offset = 3 }
+bottom = { edge = "top", offset = 29 }
+
+[windows.23_collapse]
 type   = "image"
-path   = "art/active/btn-collapse-hover.png"
-scale  = "none"
+path   = "art/btn-collapse-hover.png"
 action = "collapse"
 when   = "hover"
 unless = "pressed"
-left   = { edge = "right", offset = -128 }
-top    = { edge = "top",   offset = 3 }
-right  = { edge = "right", offset = -72 }
-bottom = { edge = "top",   offset = 44 }
+left   = { edge = "right", offset = -84 }
+right  = { edge = "right", offset = -60 }
+top    = { edge = "top", offset = 3 }
+bottom = { edge = "top", offset = 29 }
 
-[windows.33_collapse_pressed]
+[windows.24_collapse_pressed]
 type   = "image"
-path   = "art/active/btn-collapse-pressed.png"
-scale  = "none"
+path   = "art/btn-collapse-pressed.png"
 action = "collapse"
 when   = "pressed"
-left   = { edge = "right", offset = -128 }
-top    = { edge = "top",   offset = 3 }
-right  = { edge = "right", offset = -72 }
-bottom = { edge = "top",   offset = 44 }
+left   = { edge = "right", offset = -84 }
+right  = { edge = "right", offset = -60 }
+top    = { edge = "top", offset = 3 }
+bottom = { edge = "top", offset = 29 }
 
-[windows.34_fullscreen]
+[windows.25_fullscreen]
 type   = "image"
-path   = "art/active/btn-fullscreen.png"
-scale  = "none"
-action = "fullscreen"
-left   = { edge = "right", offset = -100 }
-top    = { edge = "top",   offset = 3 }
-right  = { edge = "right", offset = -44 }
-bottom = { edge = "top",   offset = 44 }
-
-[windows.35_fullscreen_hover]
-type   = "image"
-path   = "art/active/btn-fullscreen-hover.png"
-scale  = "none"
+path   = "art/btn-fullscreen-hover.png"
 action = "fullscreen"
 when   = "hover"
 unless = "pressed"
-left   = { edge = "right", offset = -100 }
-top    = { edge = "top",   offset = 3 }
-right  = { edge = "right", offset = -44 }
-bottom = { edge = "top",   offset = 44 }
+left   = { edge = "right", offset = -60 }
+right  = { edge = "right", offset = -36 }
+top    = { edge = "top", offset = 3 }
+bottom = { edge = "top", offset = 29 }
 
-[windows.36_fullscreen_pressed]
+[windows.26_fullscreen_pressed]
 type   = "image"
-path   = "art/active/btn-fullscreen-pressed.png"
-scale  = "none"
+path   = "art/btn-fullscreen-pressed.png"
 action = "fullscreen"
 when   = "pressed"
-left   = { edge = "right", offset = -100 }
-top    = { edge = "top",   offset = 3 }
-right  = { edge = "right", offset = -44 }
-bottom = { edge = "top",   offset = 44 }
+left   = { edge = "right", offset = -60 }
+right  = { edge = "right", offset = -36 }
+top    = { edge = "top", offset = 3 }
+bottom = { edge = "top", offset = 29 }
 
-[windows.37_close]
+[windows.27_close]
 type   = "image"
-path   = "art/active/btn-close.png"
-scale  = "none"
-action = "close"
-left   = { edge = "right", offset = -67 }
-top    = { edge = "top",   offset = 3 }
-right  = { edge = "right", offset = -11 }
-bottom = { edge = "top",   offset = 44 }
-
-[windows.38_close_hover]
-type   = "image"
-path   = "art/active/btn-close-hover.png"
-scale  = "none"
+path   = "art/btn-close-hover.png"
 action = "close"
 when   = "hover"
 unless = "pressed"
-left   = { edge = "right", offset = -67 }
-top    = { edge = "top",   offset = 3 }
-right  = { edge = "right", offset = -11 }
-bottom = { edge = "top",   offset = 44 }
+left   = { edge = "right", offset = -36 }
+right  = { edge = "right", offset = -12 }
+top    = { edge = "top", offset = 3 }
+bottom = { edge = "top", offset = 29 }
 
-[windows.39_close_pressed]
+[windows.28_close_pressed]
 type   = "image"
-path   = "art/active/btn-close-pressed.png"
-scale  = "none"
+path   = "art/btn-close-pressed.png"
 action = "close"
 when   = "pressed"
-left   = { edge = "right", offset = -67 }
-top    = { edge = "top",   offset = 3 }
-right  = { edge = "right", offset = -11 }
-bottom = { edge = "top",   offset = 44 }
+left   = { edge = "right", offset = -36 }
+right  = { edge = "right", offset = -12 }
+top    = { edge = "top", offset = 3 }
+bottom = { edge = "top", offset = 29 }
 
-# --------------------------------------------------------------- toolbar
+# ---------------------------------------------------------------- toolbar
+# Clock plate (title paint and slip) on the left, four speed slashes, the
+# rail across the screen with the focused window's title spaced out on it,
+# and the workspace plates on the right (the current one in cream). The bar
+# is an opaque window, so the space around the plates is filled with the
+# palette's sky and print grain, over the desktop's flat sky colour.
 
 [[toolbars]]
-height = 43
+height = 30
 
-# The toolbar window is opaque, so the band above the rail would be black
-# without a fill. Use the palette's sky colour; the mockup lets the desktop
-# show through, which we cannot do without a compositor.
-[toolbars.00_bg]
-type = "solid"
-fore = "$desktop_color"
+[toolbars.00_sky]
+type = "pattern"
+path = "art/sky.png"
 
-[toolbars.00_rail]
-type  = "image"
-path  = "art/rail.png"
-scale = "slice"
-slice = [24, 4, 24, 4]
-left  = { edge = "left",  offset = 0 }
-right = { edge = "right", offset = 0 }
-top   = { edge = "top",   offset = 8 }
-bottom= { edge = "bottom", offset = -8 }
+[toolbars.01_rail]
+type   = "image"
+path   = "art/rail.png"
+scale  = "stretch"
+top    = { edge = "top", offset = 9 }
+bottom = { edge = "top", offset = 23 }
 
-[toolbars.01_clock_plate]
-type  = "image"
-path  = "art/clock.png"
-scale = "slice"
-slice = [24, 4, 36, 8]
-left  = { edge = "left", offset = 0 }
-right = { edge = "left", offset = 172 }
-top   = { edge = "top",  offset = 0 }
-bottom= { edge = "top",  offset = 43 }
-
-[toolbars.02_time]
-type    = "text"
-content = "$time"
-font    = "$font"
-size    = 28
-fore    = "$clock_color"
-align   = "left"
-left    = { edge = "left", offset = 12 }
-right   = { edge = "left", offset = 100 }
-top     = { edge = "top",  offset = -2 }
-bottom  = { edge = "top",  offset = 28 }
-
-[toolbars.03_date]
-type      = "text"
-content   = "$date"
-font      = "$font"
-size      = 18
-fore      = "$date_color"
-align     = "left"
-transform = "upper"
-left      = { edge = "left", offset = 70 }
-right     = { edge = "left", offset = 164 }
-top       = { edge = "top",  offset = 8 }
-bottom    = { edge = "top",  offset = 28 }
-
-[toolbars.04_slashes]
-type  = "image"
-path  = "art/tb-slashes.png"
-scale = "none"
-left  = { edge = "left", offset = 154 }
-right = { edge = "left", offset = 233 }
-top   = { edge = "top",  offset = 3 }
-bottom= { edge = "top",  offset = 41 }
-
-# Focused window's title, tracked small caps, in the middle of the rail.
-[toolbars.05_rail_title]
+[toolbars.02_rail_title]
 type      = "text"
 content   = "$title"
 font      = "$font"
-size      = 11
+size      = 10
 fore      = "$rail_title"
+transform = "upper"
+letter_spacing = 3
 align     = "center"
-transform = "track"
-left      = { edge = "left",  offset = 240 }
-right     = { edge = "right", offset = -280 }
-top       = { edge = "top",   offset = 0 }
-bottom    = { edge = "bottom", offset = -8 }
+left      = { edge = "left", offset = 240 }
+right     = { edge = "right", offset = -240 }
+top       = { edge = "top", offset = 9 }
+bottom    = { edge = "top", offset = 23 }
 
-# Workspace plates on the right. The active one is cream; the others are
-# the muted metal of the palette. Hover / pressed lighten or darken the idle.
+[toolbars.03_clock]
+type   = "image"
+path   = "art/clock.png"
+left   = { edge = "left", offset = 0 }
+right  = { edge = "left", offset = 154 }
+top    = { edge = "top", offset = 1 }
+bottom = { edge = "top", offset = 28 }
+
+[toolbars.04_time]
+type    = "text"
+content = "$time"
+font    = "$font"
+size    = 20
+fore    = "$title_on"
+left    = { edge = "left", offset = 15 }
+right   = { edge = "left", offset = 62 }
+top     = { edge = "top", offset = 5 }
+bottom  = { edge = "top", offset = 28 }
+
+[toolbars.05_date]
+type           = "text"
+content        = "$date"
+font           = "$font"
+size           = 12
+fore           = "$title_on"
+transform      = "upper"
+letter_spacing = 1
+left           = { edge = "left", offset = 59 }
+right          = { edge = "left", offset = 140 }
+top            = { edge = "top", offset = 8 }
+bottom         = { edge = "top", offset = 28 }
+
+[toolbars.06_slashes]
+type   = "image"
+path   = "art/tb-slashes.png"
+left   = { edge = "left", offset = 151 }
+right  = { edge = "left", offset = 207 }
+top    = { edge = "top", offset = 4 }
+bottom = { edge = "top", offset = 28 }
+
+# The plates lean into each other (spacing -12 leaves the mockup's thin seam);
+# the region runs 6px past the screen edge so the last plate ends flush.
 [toolbars.workspace_buttons]
-left          = { edge = "right", offset = -280 }
-right         = { edge = "right", offset = -4 }
-top           = { edge = "top",   offset = 4 }
-bottom        = { edge = "top",   offset = 32 }
+left          = { edge = "right", offset = -400 }
+right         = { edge = "right", offset = 6 }
+top           = { edge = "top", offset = 4 }
+bottom        = { edge = "top", offset = 28 }
 align         = "right"
-spacing       = 1
-padding       = 10
-min_width     = 44
-max_width     = 90
-button_height = 26
+spacing       = -12
+padding       = 15
+min_width     = 48
+max_width     = 110
+button_height = 24
 
-[toolbars.workspace_buttons.normal]
-label_color = "$title_idle"
-[toolbars.workspace_buttons.occupied]
-label_color = "$title_idle"
 [toolbars.workspace_buttons.active]
-label_color = "$title_on"
-[toolbars.workspace_buttons.hover]
-label_color = "$title_idle"
-[toolbars.workspace_buttons.pressed]
-label_color = "$title_idle"
+label = "$title_on"
 
 [toolbars.workspace_buttons.00_idle]
 type   = "image"
 path   = "art/ws-idle.png"
 scale  = "slice"
-slice  = [16, 4, 16, 4]
-when   = "normal"
-unless = "occupied,hover,active"
+slice  = [12, 2, 12, 2]
+unless = "active,hover,pressed"
 
-[toolbars.workspace_buttons.01_occupied]
-type   = "image"
-path   = "art/ws-occupied.png"
-scale  = "slice"
-slice  = [16, 4, 16, 4]
-when   = "occupied"
-unless = "hover,active"
-
-[toolbars.workspace_buttons.02_hover]
+[toolbars.workspace_buttons.01_hover]
 type   = "image"
 path   = "art/ws-hover.png"
 scale  = "slice"
-slice  = [16, 4, 16, 4]
+slice  = [12, 2, 12, 2]
 when   = "hover"
-unless = "pressed,active"
+unless = "active"
 
-[toolbars.workspace_buttons.03_pressed]
+[toolbars.workspace_buttons.02_pressed]
 type   = "image"
 path   = "art/ws-pressed.png"
 scale  = "slice"
-slice  = [16, 4, 16, 4]
+slice  = [12, 2, 12, 2]
 when   = "pressed"
 
-[toolbars.workspace_buttons.04_active]
+[toolbars.workspace_buttons.03_active]
 type   = "image"
 path   = "art/ws-active.png"
 scale  = "slice"
-slice  = [16, 4, 16, 4]
+slice  = [18, 2, 12, 2]
 when   = "active"
 unless = "pressed"
 
-[toolbars.workspace_buttons.05_label]
+[toolbars.workspace_buttons.04_label]
 type    = "text"
 content = "$workspace"
 font    = "$font"
-size    = 13
-fore    = "$label_color"
+size    = 17
+fore    = "$label"
 align   = "center"
-left    = { edge = "left",  offset = 4 }
+left    = { edge = "left", offset = 4 }
 right   = { edge = "right", offset = -4 }
-top     = { edge = "top",   offset = 1 }
-bottom  = { edge = "bottom", offset = -1 }
+top     = { edge = "top", offset = 2 }
+bottom  = { edge = "bottom", offset = 0 }

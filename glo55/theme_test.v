@@ -430,7 +430,7 @@ fn test_theme_extends_loop_and_missing_base_are_errors() {
 }
 
 // Every Fresh Breath palette extends the shared layout and every image it
-// names exists in the palette's art/ (both the active and the inactive set).
+// names exists in the palette's art/ (both the focused and the unfocused set).
 fn test_fresh_breath_palettes_load_and_their_art_exists() {
 	root := os.join_path(@VMODROOT, 'themes', 'fresh-breath')
 	for pal in ['sedona', 'painted-desert', 'chillwave', 'office-print'] {
@@ -439,8 +439,8 @@ fn test_fresh_breath_palettes_load_and_their_art_exists() {
 		assert tt.window_themes.len == 1 && tt.toolbar_themes.len == 1
 		w := tt.window_themes[0]
 		assert w.shaped
-		assert w.frame_insets() == Insets{15, 41, 11, 12}
-		assert w.collapsed_height == 40
+		assert w.frame_insets() == Insets{9, 38, 5, 5}
+		assert w.collapsed_height == 39
 		assert tt.theme_background_scale == 'cover' && tt.theme_background_filter == 'linear'
 		assert os.exists(os.join_path(tt.theme_dir, tt.theme_background))
 		for f in tt.theme_font_files {
@@ -456,7 +456,14 @@ fn test_fresh_breath_palettes_load_and_their_art_exists() {
 				}
 			}
 		}
-		for ele in tt.toolbar_themes[0].elements {
+		tb := tt.toolbar_themes[0]
+		for ele in tb.elements {
+			if ele.kind == .image || ele.kind == .pattern {
+				paths << ele.path
+			}
+		}
+		assert tb.has_workspace_buttons
+		for ele in tb.workspace_buttons.elements {
 			if ele.kind == .image {
 				paths << ele.path
 			}
@@ -464,8 +471,8 @@ fn test_fresh_breath_palettes_load_and_their_art_exists() {
 		for p in paths {
 			assert os.exists(os.join_path(tt.theme_dir, p)), '${pal}: missing ${p}'
 		}
-		assert 'art/active/title.png' in paths && 'art/inactive/title.png' in paths
-		assert 'art/active/btn-close-hover.png' in paths
+		assert 'art/focused/title.png' in paths && 'art/unfocused/title.png' in paths
+		assert 'art/btn-close-hover.png' in paths && 'art/ws-active.png' in paths
 	}
 }
 

@@ -6,8 +6,8 @@
 .vmodules/
 
 # Build and test artifacts
-dist/
-screenshots/
+/dist
+/screenshots
 *.o
 *.a
 *.so

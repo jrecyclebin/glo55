@@ -6,11 +6,13 @@
 .vmodules/
 
 # Build and test artifacts
-/dist
+/build
 /screenshots
 *.o
 *.a
 *.so
+*.tmp
+*.log
 
 # Personal files
 .private-journal/**/*.embedding

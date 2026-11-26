@@ -1,0 +1,6 @@
+[Desktop Entry]
+Name=Glo55
+Comment=A tiling window manager written in V
+Exec=glo55
+Type=Application
+DesktopNames=Glo55
